@@ -77,13 +77,13 @@ public class Rational extends Real {
     }
 
     @Override
-    public Rational approximateRational() {
+    public Rational asRational() {
         return this;
     }
 
     @Override
     public int compareTo(Real real) {
-        Rational term = real.approximateRational();
+        Rational term = real.asRational();
         Int n1 = this.num;
         Int d1 = this.den;
         Int n2 = term.num;
@@ -94,7 +94,7 @@ public class Rational extends Real {
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof Real)) return false;
-        Rational term = ((Real) other).approximateRational();
+        Rational term = ((Real) other).asRational();
         Int n1 = this.num;
         Int d1 = this.den;
         Int n2 = term.num;

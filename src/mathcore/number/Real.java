@@ -29,5 +29,5 @@ package mathcore.number;
  * @version 1.0
  */
 public abstract class Real extends Number implements Comparable<Real> {
-    public abstract Rational approximateRational();
+    public abstract Rational asRational();
 }
