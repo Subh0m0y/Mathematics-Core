@@ -251,4 +251,13 @@ public class Int extends Real {
     public Int mod(Int i) {
         return new Int(integer.remainder(i.integer));
     }
+
+    /**
+     * Returns the Additive inverse of this Integer.
+     *
+     * @return The negative of this Int.
+     */
+    public Int negate() {
+        return new Int(integer.negate());
+    }
 }

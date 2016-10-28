@@ -35,6 +35,10 @@ public class Rational extends Real {
     private Int num;
     private Int den;
 
+    public Rational(int num, int den) {
+        this(new Int(num), new Int(den));
+    }
+
     public Rational(Int num, Int den) {
         // By definition, denominator is non-zero
         if (den.signum() == 0) {
@@ -45,6 +49,11 @@ public class Rational extends Real {
             this.num = Int.ZERO;
             this.den = Int.ONE;
             return;
+        }
+        // Correct the sign
+        if (den.signum() < 0) {
+            num = num.negate();
+            den = den.negate();
         }
         // Simplify the terms
         Int gcd = num.gcd(den);
@@ -102,6 +111,38 @@ public class Rational extends Real {
         return n1.multiply(d2).equals(n2.multiply(d1));
     }
 
-    // Arithmetic
+    @Override
+    public String toString() {
+        if (signum() == 0) return num.toString();
+        return num + "/" + den;
+    }
 
+    public int signum() {
+        return num.signum();
+    }
+
+    // Arithmetic
+    public Rational add(Rational term) {
+        Int a = this.num;
+        Int b = this.den;
+        Int c = term.num;
+        Int d = term.den;
+        return new Rational(a.multiply(d).add(b.multiply(c)), b.multiply(d));
+    }
+
+    public Rational multiply(Rational term) {
+        Int a = this.num;
+        Int b = this.den;
+        Int c = term.num;
+        Int d = term.den;
+        return new Rational(a.multiply(c), b.multiply(d));
+    }
+
+    public Rational subtract(Rational term) {
+        return add(term.negate());
+    }
+
+    public Rational negate() {
+        return new Rational(num.negate(), den);
+    }
 }
