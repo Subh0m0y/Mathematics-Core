@@ -24,7 +24,9 @@
 
 package mathcore.number;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 
 /**
  * A very thin wrapper around a BigInteger object to help integrate the
@@ -152,6 +154,20 @@ public class Int extends Real {
     @Override
     public Rational asRational() {
         return new Rational(this);
+    }
+
+    public Int asInt() {
+        return this;
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return integer;
+    }
+
+    @Override
+    public BigDecimal toBigDecimal(MathContext context) {
+        return new BigDecimal(integer, context);
     }
 
     /**

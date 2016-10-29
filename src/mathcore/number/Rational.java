@@ -24,6 +24,10 @@
 
 package mathcore.number;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+
 /**
  * This class is meant to encapsulate all Rational numbers. It contains the
  * algorithms to perform basic operations on this set of numbers.
@@ -73,6 +77,10 @@ public class Rational extends Real {
         Int gcd = num.gcd(den);
         this.num = num.divide(gcd);
         this.den = den.divide(gcd);
+    }
+
+    public Rational(BigDecimal decimal) {
+
     }
 
     /**
@@ -125,6 +133,40 @@ public class Rational extends Real {
     @Override
     public Rational asRational() {
         return this;
+    }
+
+    /**
+     * @return Returns the value of this Rational as an Int (after
+     * truncation).
+     */
+    @Override
+    public Int asInt() {
+        return num.divide(den);
+    }
+
+    /**
+     * @return Returns the value of this Rational as a {@link BigInteger}
+     * (after truncation).
+     */
+    @Override
+    public BigInteger toBigInteger() {
+        return asInt().toBigInteger();
+    }
+
+    /**
+     * Converts this Rational to a BigDecimal with the required precision
+     * and applying the necessary rounding, as provided in the MathContext.
+     *
+     * @param context The MathContext according to which calculations are
+     *                to be done.
+     * @return This Rational as a BigDecimal with the required precision
+     * and applying the necessary rounding, as provided in the MathContext.
+     */
+    @Override
+    public BigDecimal toBigDecimal(MathContext context) {
+        BigDecimal n = num.toBigDecimal(context);
+        BigDecimal d = den.toBigDecimal(context);
+        return n.divide(d, context);
     }
 
     @Override
