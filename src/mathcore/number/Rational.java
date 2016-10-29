@@ -32,13 +32,27 @@ package mathcore.number;
  * @version 1.0
  */
 public class Rational extends Real {
-    private Int num;
-    private Int den;
+    private Int num;    // The numerator
+    private Int den;    // The denominator
 
+    /**
+     * Convenient constructor to create a Rational from given ints.
+     * If the denominator is zero, an {@link ArithmeticException} is thrown.
+     *
+     * @param num The numerator.
+     * @param den The denominator (must be non-zero).
+     */
     public Rational(int num, int den) {
         this(new Int(num), new Int(den));
     }
 
+    /**
+     * Constructor to create a Rational from given Ints.
+     * If the denominator is zero, an {@link ArithmeticException} is thrown.
+     *
+     * @param num The numerator.
+     * @param den The denominator (must be non-zero).
+     */
     public Rational(Int num, Int den) {
         // By definition, denominator is non-zero
         if (den.signum() == 0) {
@@ -61,30 +75,53 @@ public class Rational extends Real {
         this.den = den.divide(gcd);
     }
 
+    /**
+     * Returns the given Integer as a Rational. Every integer can be
+     * expressed as a reduced Rational object.
+     *
+     * @param integer The integer to represent.
+     */
     public Rational(Int integer) {
         this(integer, Int.ONE);
     }
 
+    /**
+     * @return The value of this Rational as an int, with truncation,
+     * provided that overflow doesn't occur.
+     */
     @Override
     public int intValue() {
         return num.divide(den).intValue();
     }
 
+    /**
+     * @return The value of this Rational as a long, with truncation,
+     * provided that overflow doesn't occur.
+     */
     @Override
     public long longValue() {
         return num.divide(den).longValue();
     }
 
+    /**
+     * @return The value of this Rational as a float.
+     */
     @Override
     public float floatValue() {
         return num.divide(den).floatValue();
     }
 
+    /**
+     * @return The value of this Rational as a double.
+     */
     @Override
     public double doubleValue() {
         return num.divide(den).doubleValue();
     }
 
+    /**
+     * @return Returns this Rational as a Rational, which is itself.
+     */
     @Override
     public Rational asRational() {
         return this;
@@ -144,5 +181,9 @@ public class Rational extends Real {
 
     public Rational negate() {
         return new Rational(num.negate(), den);
+    }
+
+    public Rational reciprocate() {
+        return new Rational(den, num);
     }
 }
