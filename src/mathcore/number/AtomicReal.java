@@ -24,25 +24,10 @@
 
 package mathcore.number;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.MathContext;
-
 /**
  * @author Subhomoy Haldar
  * @version 1.0
  */
-public abstract class Real extends Number implements Comparable<Real> {
-    public abstract Rational asRational();
+public abstract class AtomicReal extends Real {
 
-    public abstract Int asInt();
-
-    public abstract BigInteger toBigInteger();
-
-    public abstract BigDecimal toBigDecimal(MathContext context);
-
-//    public abstract Real add(Real real);
-//    public abstract Real subtract(Real real);
-//    public abstract Real multiply(Real real);
-//    public abstract Real divide(Real real);
 }

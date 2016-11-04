@@ -35,7 +35,7 @@ import java.math.MathContext;
  * @author Subhomoy Haldar
  * @version 1.0
  */
-public class Rational extends Real {
+public class Rational extends AtomicReal {
     private Int num;    // The numerator
     private Int den;    // The denominator
 
@@ -221,6 +221,13 @@ public class Rational extends Real {
         Int c = term.num;
         Int d = term.den;
         return new Rational(a.multiply(d).add(b.multiply(c)), b.multiply(d));
+    }
+
+    public Real add(Real real) {
+        if (real instanceof Int || real instanceof Rational) {
+            return add(real.asRational());
+        }
+        return null;
     }
 
     public Rational multiply(Rational term) {

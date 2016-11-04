@@ -35,7 +35,7 @@ import java.math.MathContext;
  * @author Subhomoy Haldar
  * @version 1.0
  */
-public class Int extends Real {
+public class Int extends AtomicReal {
     /**
      * The constant representing the Integer ONE (1).
      */
