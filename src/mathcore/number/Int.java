@@ -167,7 +167,7 @@ public class Int extends Real {
 
     @Override
     public BigDecimal toBigDecimal(MathContext context) {
-        return new BigDecimal(integer, context);
+        return new BigDecimal(integer, context).stripTrailingZeros();
     }
 
     /**

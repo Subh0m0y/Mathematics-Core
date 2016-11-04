@@ -79,8 +79,22 @@ public class Rational extends Real {
         this.den = den.divide(gcd);
     }
 
-    public Rational(BigDecimal decimal) {
+    public Rational(String string) {
+        this(new BigDecimal(string));
+    }
 
+    public Rational(BigDecimal decimal) {
+        BigInteger mag = decimal.unscaledValue();
+        int scale = decimal.scale();
+        if (scale < 0) {
+            BigInteger p10 = BigInteger.TEN.pow(-scale);
+            num = new Int(mag.multiply(p10));
+            den = Int.ONE;
+        } else {
+            BigInteger p10 = BigInteger.TEN.pow(scale);
+            num = new Int(mag);
+            den = new Int(p10);
+        }
     }
 
     /**
@@ -166,7 +180,7 @@ public class Rational extends Real {
     public BigDecimal toBigDecimal(MathContext context) {
         BigDecimal n = num.toBigDecimal(context);
         BigDecimal d = den.toBigDecimal(context);
-        return n.divide(d, context);
+        return n.divide(d, context).stripTrailingZeros();
     }
 
     @Override
