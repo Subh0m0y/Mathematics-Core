@@ -24,9 +24,76 @@
 
 package mathcore.ops;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+
 /**
+ * Provides implementations for commonly used mathematical functions. All
+ * algorithms are arbitrary-precision and require a MathContext to specify
+ * the amount of precision needed.
+ * <p>
+ * For accuracy reasons, the precision used internally in the algorithms is
+ * actually a few digits more than specified.
+ *
  * @author Subhomoy Haldar
  * @version 1.0
  */
 public class BigMath {
+    public static BigDecimal principalRoot(final BigDecimal decimal,
+                                           final int n,
+                                           final MathContext context)
+            throws ArithmeticException {
+        if (n < 2)
+            throw new ArithmeticException("'n' must at least be 2.");
+        if (decimal.signum() == 0)
+            return BigDecimal.ZERO;
+        if (decimal.signum() < 0)
+            throw new ArithmeticException("Only positive values are supported.");
+        return nthRoot(decimal, n, context);
+    }
+
+    private static BigDecimal nthRoot(final BigDecimal a,
+                                      final int n,
+                                      final MathContext c0) {
+        // Obtain constants that will be used in every iteration
+        final BigDecimal N = BigDecimal.valueOf(n);
+        final int n_1 = n - 1;
+
+        // Increase precision by "n";
+        final int newPrecision = c0.getPrecision() + n;
+
+        final MathContext c = new MathContext(
+                newPrecision,
+                c0.getRoundingMode()    // Retain rounding mode
+        );
+
+        // The iteration limit (quadratic convergence)
+        final int limit = n * n * (31 - Integer.numberOfLeadingZeros(newPrecision)) >>> 1;
+
+        // Make an initial guess:
+
+        // 1. Obtain first (1/n)th of total bits of magnitude
+        BigInteger magnitude = a.unscaledValue();
+        final int length = magnitude.bitLength() * n_1 / n;
+        magnitude = magnitude.shiftRight(length);
+
+        // 2. Obtain the correct scale
+        final int newScale = a.scale() / n;
+
+        // 3. Construct the initial guess
+        BigDecimal x = new BigDecimal(magnitude, newScale);
+        BigDecimal x0;
+
+        // Iterate
+        for (int i = 0; i < limit; i++) {
+            x0 = x;
+            BigDecimal delta = a.divide(x0.pow(n_1), c)
+                    .subtract(x0, c)
+                    .divide(N, c);
+            x = x0.add(delta, c);
+        }
+
+        return x.round(c);
+    }
 }
