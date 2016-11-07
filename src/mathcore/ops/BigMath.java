@@ -28,6 +28,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 
+import static java.math.BigDecimal.*;
+import static java.math.BigDecimal.ONE;
+
 /**
  * Provides implementations for commonly used mathematical functions. All
  * algorithms are arbitrary-precision and require a MathContext to specify
@@ -47,7 +50,7 @@ public class BigMath {
         if (n < 2)
             throw new ArithmeticException("'n' must at least be 2.");
         if (decimal.signum() == 0)
-            return BigDecimal.ZERO;
+            return ZERO;
         if (decimal.signum() < 0)
             throw new ArithmeticException("Only positive values are supported.");
         return nthRoot(decimal, n, context);
@@ -57,7 +60,7 @@ public class BigMath {
                                       final int n,
                                       final MathContext c0) {
         // Obtain constants that will be used in every iteration
-        final BigDecimal N = BigDecimal.valueOf(n);
+        final BigDecimal N = valueOf(n);
         final int n_1 = n - 1;
 
         // Increase precision by "n";
@@ -106,7 +109,7 @@ public class BigMath {
     public static BigDecimal E(MathContext context) {
         if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
             return E_40.round(context);
-        return smallExp(BigDecimal.ONE, context);
+        return smallExp(ONE, context);
     }
 
     public static BigDecimal exp(BigDecimal x, MathContext context) {
@@ -125,19 +128,50 @@ public class BigMath {
 
     private static BigDecimal smallExp(BigDecimal x, MathContext context) {
         BigDecimal num = x;                 // Numerator
-        BigDecimal den = BigDecimal.ONE;    // Denominator
+        BigDecimal den = ONE;               // Denominator
         // The actual of result of num/den
         BigDecimal term = num.divide(den, context);
-        BigDecimal sum = BigDecimal.ONE;    // Accumulator
+        BigDecimal sum = ONE;               // Accumulator
         // The tolerable error
         BigDecimal eps = new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
         long i = 1; // The factorial variable
         while (term.compareTo(eps) > 0) {
             term = num.divide(den, context);
             sum = sum.add(term, context);
-            den = den.multiply(BigDecimal.valueOf(++i));
+            den = den.multiply(valueOf(++i));
             num = num.multiply(x);
         }
         return sum;
+    }
+
+    public static BigDecimal log(BigDecimal x, MathContext context) {
+        MathContext c = expandContext(context, context.getPrecision() + 1);
+        BigDecimal E = E(c);
+        BigDecimal intExp = ZERO;
+
+        // Work out the integral part of the exponent
+        while (x.compareTo(E) > 0) {
+            x = x.divide(E, c);
+            intExp = intExp.add(ONE);
+        }
+
+        return intExp.add(smallLog(x, c), context);
+    }
+
+    private static BigDecimal smallLog(BigDecimal x, MathContext c) {
+        BigDecimal term = (x.subtract(ONE)).divide(x.add(ONE), c);
+        BigDecimal sq = term.multiply(term, c);
+        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+
+        BigDecimal sum = term;  // The accumulator
+        long den = 3;           // The denominator
+
+        while (term.compareTo(eps) > 0) {
+            term = term.multiply(sq, c);
+            sum = sum.add(term.divide(valueOf(den), c));
+            den += 2;
+        }
+
+        return sum.add(sum, c); // The final multiplication by 2
     }
 }
