@@ -63,10 +63,7 @@ public class BigMath {
         // Increase precision by "n";
         final int newPrecision = c0.getPrecision() + n;
 
-        final MathContext c = new MathContext(
-                newPrecision,
-                c0.getRoundingMode()    // Retain rounding mode
-        );
+        final MathContext c = expandContext(c0, newPrecision);
 
         // The iteration limit (quadratic convergence)
         final int limit = n * n * (31 - Integer.numberOfLeadingZeros(newPrecision)) >>> 1;
@@ -95,5 +92,52 @@ public class BigMath {
         }
 
         return x.round(c);
+    }
+
+    private static MathContext expandContext(MathContext c0, int newPrecision) {
+        return new MathContext(
+                newPrecision,
+                c0.getRoundingMode()    // Retain rounding mode
+        );
+    }
+
+    private static final BigDecimal E_40 = new BigDecimal("2.718281828459045235360287471352662497761");
+
+    public static BigDecimal E(MathContext context) {
+        if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
+            return E_40.round(context);
+        return smallExp(BigDecimal.ONE, context);
+    }
+
+    public static BigDecimal exp(BigDecimal x, MathContext context) {
+        // Perform the calculations with a bigger context
+        int newPrecision = (int) (context.getPrecision() * 1.2);
+        MathContext c = expandContext(context, newPrecision);
+        // The value of e for the integral portion
+        BigDecimal E = E(c);
+        BigInteger intExp = x.toBigInteger();
+        BigDecimal fraction = x.subtract(new BigDecimal(intExp));
+
+        return E.pow(intExp.intValueExact(), c).multiply(
+                smallExp(fraction, c), context
+        );
+    }
+
+    private static BigDecimal smallExp(BigDecimal x, MathContext context) {
+        BigDecimal num = x;                 // Numerator
+        BigDecimal den = BigDecimal.ONE;    // Denominator
+        // The actual of result of num/den
+        BigDecimal term = num.divide(den, context);
+        BigDecimal sum = BigDecimal.ONE;    // Accumulator
+        // The tolerable error
+        BigDecimal eps = new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
+        long i = 1; // The factorial variable
+        while (term.compareTo(eps) > 0) {
+            term = num.divide(den, context);
+            sum = sum.add(term, context);
+            den = den.multiply(BigDecimal.valueOf(++i));
+            num = num.multiply(x);
+        }
+        return sum;
     }
 }

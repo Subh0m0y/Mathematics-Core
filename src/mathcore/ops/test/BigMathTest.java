@@ -39,9 +39,9 @@ import static org.testng.AssertJUnit.assertTrue;
  * @version 1.0
  */
 public class BigMathTest {
-    private static final int NTH_ROOT_LIMIT = 2;
+    private static final int NTH_ROOT_LIMIT = 20;
     private static final int PRECISION = 30;
-    private static final int SCALE_LIMIT = 10000;
+    private static final int SCALE_LIMIT = 100;
     private static final int ROOT_LIMIT = 100;
     private static final MathContext CONTEXT = new MathContext(PRECISION, RoundingMode.HALF_EVEN);
     private static final Random RANDOM = new Random();
