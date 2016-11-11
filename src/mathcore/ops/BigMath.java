@@ -29,7 +29,6 @@ import java.math.BigInteger;
 import java.math.MathContext;
 
 import static java.math.BigDecimal.*;
-import static java.math.BigDecimal.ONE;
 
 /**
  * Provides implementations for commonly used mathematical functions. All
@@ -43,6 +42,12 @@ import static java.math.BigDecimal.ONE;
  * @version 1.0
  */
 public class BigMath {
+
+    public static BigDecimal sqrt(final BigDecimal decimal,
+                                  final MathContext context) {
+        return principalRoot(decimal, 2, context);
+    }
+
     public static BigDecimal principalRoot(final BigDecimal decimal,
                                            final int n,
                                            final MathContext context)
@@ -113,20 +118,29 @@ public class BigMath {
     }
 
     public static BigDecimal exp(BigDecimal x, MathContext context) {
+        // Quick exit
+        if (x.signum() == 0) return ONE;
+
         // Perform the calculations with a bigger context
         int newPrecision = (int) (context.getPrecision() * 1.2);
         MathContext c = expandContext(context, newPrecision);
         // The value of e for the integral portion
         BigDecimal E = E(c);
-        BigInteger intExp = x.toBigInteger();
-        BigDecimal fraction = x.subtract(new BigDecimal(intExp));
+        BigDecimal abs = x.abs();
+        BigInteger intExp = abs.toBigInteger();
+        BigDecimal fraction = abs.subtract(new BigDecimal(intExp));
 
-        return E.pow(intExp.intValueExact(), c).multiply(
+        BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
                 smallExp(fraction, c), context
         );
+
+        return x.signum() < 0 ? ONE.divide(exp, context) : exp;
     }
 
     private static BigDecimal smallExp(BigDecimal x, MathContext context) {
+        // Quick exit
+        if (x.signum() == 0) return ONE;
+
         BigDecimal num = x;                 // Numerator
         BigDecimal den = ONE;               // Denominator
         // The actual of result of num/den
@@ -144,7 +158,11 @@ public class BigMath {
         return sum;
     }
 
-    public static BigDecimal log(BigDecimal x, MathContext context) {
+    public static BigDecimal log(BigDecimal x, MathContext context)
+            throws ArithmeticException {
+        if (x.signum() <= 0) {
+            throw new ArithmeticException("Invalid value: can't handle 0 and negatives.");
+        }
         MathContext c = expandContext(context, context.getPrecision() + 1);
         BigDecimal E = E(c);
         BigDecimal intExp = ZERO;
@@ -174,4 +192,40 @@ public class BigMath {
 
         return sum.add(sum, c); // The final multiplication by 2
     }
+
+    private static final BigDecimal TWO = BigDecimal.valueOf(2);
+    private static final BigDecimal FOUR = BigDecimal.valueOf(4);
+
+    private static final BigDecimal HALF = new BigDecimal("0.5");
+    private static final BigDecimal FOURTH = new BigDecimal("0.25");
+
+    private static final BigDecimal PI_40 = new BigDecimal("3.141592653589793238462643383279502884197");
+
+    public static BigDecimal PI(MathContext context) {
+        if (context.getPrecision() <= 0) {
+            return PI_40.round(context);
+        }
+
+        MathContext c = expandContext(context, context.getPrecision() + 1);
+
+        BigDecimal a = ONE;
+        BigDecimal b = ONE.divide(sqrt(TWO, c), c);
+        BigDecimal t = FOURTH;
+        BigDecimal p = ONE;
+
+        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+
+        while (a.subtract(b).abs().compareTo(eps) > 0) {
+            BigDecimal A = a.add(b).divide(TWO, c);
+            b = BigMath.sqrt(a.multiply(b), c);
+            t = t.subtract(p.multiply(
+                    A.subtract(a).pow(2)
+            ), c);
+            p = p.add(p);
+            a = A;
+        }
+
+        return a.add(b).pow(2).divide(FOUR.multiply(t), context);
+    }
+
 }
