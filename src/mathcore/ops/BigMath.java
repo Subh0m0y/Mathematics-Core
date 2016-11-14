@@ -231,7 +231,7 @@ public class BigMath {
 
     public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
         // Restrict the domain first
-        x = x.remainder(TWO.multiply(PI(context)));
+        x = x.remainder(PI(context).multiply(HALF));
 
         return sinCos(x, expandContext(context, context.getPrecision() + 2));
     }
@@ -242,6 +242,14 @@ public class BigMath {
 
     public static BigDecimal cos(BigDecimal x, MathContext context) {
         return sinAndCos(x, context)[1];
+    }
+
+    public static BigDecimal tan(BigDecimal x, MathContext context) {
+        if (x.remainder(PI(context).multiply(HALF)).signum() == 0) {
+            throw new ArithmeticException("Tan undefined at multiples of pi/2.");
+        }
+        BigDecimal[] a = sinAndCos(x, context);
+        return a[0].round(context).divide(a[1].round(context), context);
     }
 
     /**
