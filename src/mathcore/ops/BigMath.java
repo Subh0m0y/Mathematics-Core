@@ -102,7 +102,7 @@ public class BigMath {
         return x.round(c);
     }
 
-    private static MathContext expandContext(MathContext c0, int newPrecision) {
+    public static MathContext expandContext(MathContext c0, int newPrecision) {
         return new MathContext(
                 newPrecision,
                 c0.getRoundingMode()    // Retain rounding mode
@@ -206,6 +206,9 @@ public class BigMath {
             return PI_40.round(context);
         }
 
+        // Use the AGM algorithm (aka Gauss–Legendre algorithm)
+        // https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_algorithm
+
         MathContext c = expandContext(context, context.getPrecision() + 1);
 
         BigDecimal a = ONE;
@@ -216,11 +219,9 @@ public class BigMath {
         BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
 
         while (a.subtract(b).abs().compareTo(eps) > 0) {
-            BigDecimal A = a.add(b).divide(TWO, c);
+            BigDecimal A = a.add(b).multiply(HALF, c);
             b = BigMath.sqrt(a.multiply(b), c);
-            t = t.subtract(p.multiply(
-                    A.subtract(a).pow(2)
-            ), c);
+            t = t.subtract(p.multiply(A.subtract(a).pow(2)), c);
             p = p.add(p);
             a = A;
         }
@@ -228,4 +229,49 @@ public class BigMath {
         return a.add(b).pow(2).divide(FOUR.multiply(t), context);
     }
 
+    public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
+        // Restrict the domain first
+        x = x.remainder(TWO.multiply(PI(context)));
+
+        return sinCos(x, expandContext(context, context.getPrecision() + 2));
+    }
+
+    public static BigDecimal sin(BigDecimal x, MathContext context) {
+        return sinAndCos(x, context)[0];
+    }
+
+    public static BigDecimal cos(BigDecimal x, MathContext context) {
+        return sinAndCos(x, context)[1];
+    }
+
+    /**
+     * Works only for restricted values of x. Restriction is within the interval
+     * -pi/2 to +pi/2.
+     */
+    private static BigDecimal[] sinCos(BigDecimal x, MathContext c) {
+        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+
+        BigDecimal term = ONE;
+        BigDecimal sin = ZERO;
+        BigDecimal cos = ONE;
+
+        for (int i = 1; term.abs().compareTo(eps) > 0; i++) {
+            term = term.multiply(x).divide(BigDecimal.valueOf(i), c);
+            switch (i % 4) {
+                case 0:
+                    cos = cos.add(term, c);
+                    break;
+                case 1:
+                    sin = sin.add(term, c);
+                    break;
+                case 2:
+                    cos = cos.subtract(term, c);
+                    break;
+                case 3:
+                    sin = sin.subtract(term, c);
+                    break;
+            }
+        }
+        return new BigDecimal[]{sin, cos};
+    }
 }
