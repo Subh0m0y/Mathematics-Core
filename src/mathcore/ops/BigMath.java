@@ -43,24 +43,58 @@ import static java.math.BigDecimal.*;
  */
 public class BigMath {
 
+    // Make this class un-instantiable
+    private BigMath() {
+    }
+
+    /**
+     * Returns the square root of the given positive {@link BigDecimal} value.
+     * The result has two extra bits of precision to ensure better accuracy.
+     *
+     * @param decimal The value whose square root is sought.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The square root of {@code decimal}.
+     * @throws ArithmeticException If {@code decimal} is negative.
+     */
     public static BigDecimal sqrt(final BigDecimal decimal,
-                                  final MathContext context) {
+                                  final MathContext context)
+            throws ArithmeticException {
         return principalRoot(decimal, 2, context);
     }
 
+    /**
+     * Returns the principal n-th root of the given positive value.
+     *
+     * @param decimal The value whose n-th root is sought.
+     * @param n       The value of n needed.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The principal n-th root of {@code decimal}.
+     * @throws ArithmeticException If n is lesser than 2 or {@code decimal} is negative.
+     */
     public static BigDecimal principalRoot(final BigDecimal decimal,
                                            final int n,
                                            final MathContext context)
             throws ArithmeticException {
         if (n < 2)
             throw new ArithmeticException("'n' must at least be 2.");
+        // Quick exits
         if (decimal.signum() == 0)
             return ZERO;
+        if (decimal.compareTo(ONE) == 0)
+            return ONE;
         if (decimal.signum() < 0)
             throw new ArithmeticException("Only positive values are supported.");
         return nthRoot(decimal, n, context);
     }
 
+    /**
+     * Uses the n-th root algorithm to find principal root of a verified value.
+     *
+     * @param a  The value whose n-th root is sought.
+     * @param n  The root to find.
+     * @param c0 The initial (unexpanded) MathContext.
+     * @return The required principal root.
+     */
     private static BigDecimal nthRoot(final BigDecimal a,
                                       final int n,
                                       final MathContext c0) {
@@ -102,6 +136,16 @@ public class BigMath {
         return x.round(c);
     }
 
+    /**
+     * A utility method that helps obtain a new {@link MathContext} from an existing
+     * one. The new Context has the new precision specified but retains the {@link java.math.RoundingMode}.
+     * <p>
+     * Usually, it is used to increase the precision and hence "expand" the Context.
+     *
+     * @param c0           The initial {@link MathContext}.
+     * @param newPrecision The required precision.
+     * @return The new expanded Context.
+     */
     public static MathContext expandContext(MathContext c0, int newPrecision) {
         return new MathContext(
                 newPrecision,
@@ -111,13 +155,29 @@ public class BigMath {
 
     private static final BigDecimal E_40 = new BigDecimal("2.718281828459045235360287471352662497761");
 
+    /**
+     * Returns the value of {@code e}, or Euler's constant, the base of the natural logarithm
+     * with the specified precision.
+     *
+     * @param context The precision needed.
+     * @return The value of e with the desired precision.
+     */
     public static BigDecimal E(MathContext context) {
         if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
             return E_40.round(context);
         return smallExp(ONE, context);
     }
 
-    public static BigDecimal exp(BigDecimal x, MathContext context) {
+    /**
+     * Returns the value obtained on raising e to the power x.
+     *
+     * @param x       The power to raise e to.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The required value of e<sup>x</sup>.
+     * @throws ArithmeticException If abs(x) is too big (bigger than {@link Integer#MAX_VALUE}).
+     */
+    public static BigDecimal exp(BigDecimal x, MathContext context)
+            throws ArithmeticException {
         // Quick exit
         if (x.signum() == 0) return ONE;
 
@@ -130,6 +190,7 @@ public class BigMath {
         BigInteger intExp = abs.toBigInteger();
         BigDecimal fraction = abs.subtract(new BigDecimal(intExp));
 
+        // If the integral part is too large, an exception maybe thrown.
         BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
                 smallExp(fraction, c), context
         );
@@ -137,6 +198,13 @@ public class BigMath {
         return x.signum() < 0 ? ONE.divide(exp, context) : exp;
     }
 
+    /**
+     * Uses the Taylor series to approximate exp() for small values of x.
+     *
+     * @param x       A small positive argument (less than e).
+     * @param context The The MathContext to specify the precision and RoundingMode.
+     * @return exp(x) for small positive value of x.
+     */
     private static BigDecimal smallExp(BigDecimal x, MathContext context) {
         // Quick exit
         if (x.signum() == 0) return ONE;
