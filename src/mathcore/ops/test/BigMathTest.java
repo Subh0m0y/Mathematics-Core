@@ -30,9 +30,7 @@ import org.testng.annotations.Test;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.StringJoiner;
 
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -42,7 +40,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class BigMathTest {
     private static final int NTH_ROOT_LIMIT = 20;
-    private static final int PRECISION = 30;
+    private static final int PRECISION = 300;
     private static final int SCALE_LIMIT = 100;
     private static final int ROOT_LIMIT = 100;
     private static final MathContext CONTEXT = new MathContext(PRECISION, RoundingMode.HALF_EVEN);

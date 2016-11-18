@@ -271,7 +271,13 @@ public class BigMath {
                                  MathContext context) {
         MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
 
-        return exp(y.multiply(log(x, c)), c);
+        BigDecimal abs = y.abs();
+        int p = abs.toBigInteger().intValueExact();
+        BigDecimal f = abs.remainder(ONE);
+
+        BigDecimal v = x.pow(p).multiply(exp(f.multiply(log(x, c)), c));
+
+        return x.signum() < 0 ? ONE.divide(v, c) : v;
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
