@@ -91,4 +91,24 @@ public class BigMathTest {
             assertTrue(e.round(CONTEXT).compareTo(a) == 0);
         }
     }
+
+    private static final int POW_LIMIT = 10;
+    private static final int POW_VAL_LIMIT = 1000;
+
+    @Test
+    public void testPow() throws Exception {
+        for (int i = 0; i < POW_LIMIT; i++) {
+            BigDecimal x = Helper.generateRandom(PRECISION, 1, RANDOM);
+            x = x.add(BigDecimal.ONE, CONTEXT);
+
+            BigDecimal y = new BigDecimal(RANDOM.nextInt(POW_VAL_LIMIT) + RANDOM.nextDouble());
+            if (RANDOM.nextBoolean()) y = y.negate();
+
+            BigDecimal p = BigMath.pow(x, y, CONTEXT);
+            BigDecimal r = BigDecimal.ONE.divide(y, BigMath.expandContext(CONTEXT, (int) (PRECISION * 1.2)));
+            BigDecimal n = BigMath.pow(p, r, CONTEXT);
+
+            assertTrue(n.round(CONTEXT).compareTo(x) == 0);
+        }
+    }
 }
