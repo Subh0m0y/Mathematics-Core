@@ -60,4 +60,21 @@ public class BigMathTest {
         }
     }
 
+    private static final int EXP_LOG_LIMIT = 10;
+    private static final int EXP_LIMIT = 1000;
+
+    @Test
+    public void testExpLog() throws Exception {
+        for (int i = 0; i < EXP_LOG_LIMIT; i++) {
+            BigDecimal a = new BigDecimal(RANDOM.nextInt(EXP_LIMIT) + RANDOM.nextDouble());
+            if (RANDOM.nextBoolean()) a = a.negate();
+            a = a.round(CONTEXT);
+
+            BigDecimal e = BigMath.exp(a, CONTEXT);
+            BigDecimal l = BigMath.log(e, CONTEXT);
+
+            assertTrue(l.round(CONTEXT).compareTo(a) == 0);
+        }
+
+    }
 }

@@ -192,10 +192,10 @@ public class BigMath {
 
         // If the integral part is too large, an exception maybe thrown.
         BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
-                smallExp(fraction, c), context
+                smallExp(fraction, c), c
         );
 
-        return x.signum() < 0 ? ONE.divide(exp, context) : exp;
+        return x.signum() < 0 ? ONE.divide(exp, c) : exp;
     }
 
     /**
@@ -231,7 +231,7 @@ public class BigMath {
         if (x.signum() <= 0) {
             throw new ArithmeticException("Invalid value: can't handle 0 and negatives.");
         }
-        MathContext c = expandContext(context, context.getPrecision() + 1);
+        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
         BigDecimal E = E(c);
         BigDecimal intExp = ZERO;
 
@@ -239,6 +239,11 @@ public class BigMath {
         while (x.compareTo(E) > 0) {
             x = x.divide(E, c);
             intExp = intExp.add(ONE);
+        }
+        // Correction for arguments that are too small
+        while (x.compareTo(ONE) < 0) {
+            x = x.multiply(E, c);
+            intExp = intExp.subtract(ONE);
         }
 
         return intExp.add(smallLog(x, c), context);
@@ -259,6 +264,14 @@ public class BigMath {
         }
 
         return sum.add(sum, c); // The final multiplication by 2
+    }
+
+    public static BigDecimal pow(BigDecimal x,
+                                 BigDecimal y,
+                                 MathContext context) {
+        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
+
+        return exp(y.multiply(log(x, c)), c);
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
