@@ -33,12 +33,12 @@ import java.util.Random;
  * @version 1.0
  */
 public class Helper {
-    private static final double LOG2 = Math.log(2);
+    private static final double LOG2_INV = 1 / Math.log(2);
 
     public static BigDecimal generateRandom(int precision,
                                             int scaleLimit,
                                             Random random) {
-        int numBits = (int) (Math.log(precision) / LOG2 + 1);
+        int numBits = (int) (Math.log(precision) * LOG2_INV + 1);
         BigInteger magnitude = new BigInteger(numBits, random);
         int scale = random.nextInt(scaleLimit);
         if (random.nextBoolean())

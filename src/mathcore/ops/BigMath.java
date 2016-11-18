@@ -231,7 +231,7 @@ public class BigMath {
         if (x.signum() <= 0) {
             throw new ArithmeticException("Invalid value: can't handle 0 and negatives.");
         }
-        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
+        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.5));
         BigDecimal E = E(c);
         BigDecimal intExp = ZERO;
 
@@ -246,7 +246,7 @@ public class BigMath {
             intExp = intExp.subtract(ONE);
         }
 
-        return intExp.add(smallLog(x, c), context);
+        return intExp.add(smallLog(x, c), c);
     }
 
     private static BigDecimal smallLog(BigDecimal x, MathContext c) {

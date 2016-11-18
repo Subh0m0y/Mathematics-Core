@@ -30,7 +30,9 @@ import org.testng.annotations.Test;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.StringJoiner;
 
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -49,8 +51,6 @@ public class BigMathTest {
     @Test
     public void testPrincipalRoot() throws Exception {
         for (int i = 0; i < NTH_ROOT_LIMIT; i++) {
-            System.out.println("Now at #" + i);
-
             BigDecimal a = Helper.generateRandom(PRECISION, SCALE_LIMIT, RANDOM);
             int n = RANDOM.nextInt(ROOT_LIMIT - 2) + 2;
 
@@ -60,7 +60,7 @@ public class BigMathTest {
         }
     }
 
-    private static final int EXP_LOG_LIMIT = 10;
+    private static final int EXP_LOG_LIMIT = 1000;
     private static final int EXP_LIMIT = 1000;
 
     @Test
@@ -75,6 +75,20 @@ public class BigMathTest {
 
             assertTrue(l.round(CONTEXT).compareTo(a) == 0);
         }
+    }
 
+    private final static int LOG_EXP_LIMIT = 1000;
+
+    @Test
+    public void testLogExp() throws Exception {
+        for (int i = 0; i < LOG_EXP_LIMIT; i++) {
+            BigDecimal a = Helper.generateRandom(PRECISION, SCALE_LIMIT, RANDOM);
+            a = a.add(BigDecimal.ONE, CONTEXT);
+
+            BigDecimal l = BigMath.log(a, CONTEXT);
+            BigDecimal e = BigMath.exp(l, CONTEXT);
+
+            assertTrue(e.round(CONTEXT).compareTo(a) == 0);
+        }
     }
 }
