@@ -332,11 +332,12 @@ public class BigMath {
     }
 
     public static BigDecimal tan(BigDecimal x, MathContext context) {
-        if (x.remainder(PI(context).multiply(HALF)).signum() == 0) {
+        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
+        if (x.remainder(PI(c).multiply(HALF)).signum() == 0) {
             throw new ArithmeticException("Tan undefined at multiples of pi/2.");
         }
-        BigDecimal[] a = sinAndCos(x, context);
-        return a[0].round(context).divide(a[1].round(context), context);
+        BigDecimal[] a = sinAndCos(x, c);
+        return a[0].round(c).divide(a[1].round(c), c);
     }
 
     /**
@@ -368,5 +369,72 @@ public class BigMath {
             }
         }
         return new BigDecimal[]{sin, cos};
+    }
+
+    public static BigDecimal arcsin(BigDecimal z, MathContext context) {
+        if (z.abs().compareTo(ONE) == 0) {
+            BigDecimal result = PI(context).multiply(HALF);
+            return z.signum() > 0 ? result : result.negate();
+        }
+        MathContext c = expandContext(context, context.getPrecision() + 1);
+        return arctan(z.divide(sqrt(ONE.subtract(z.pow(2)), c), c), context);
+    }
+
+    public static BigDecimal arctan(BigDecimal z, MathContext context) {
+        return atan2(z, ONE, context);
+    }
+
+    public static BigDecimal atan2(BigDecimal y, BigDecimal x, MathContext context)
+            throws ArithmeticException {
+        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
+        if (x.signum() == 0) {
+            if (y.signum() == 0) {
+                throw new ArithmeticException("Undefined: atan2(0,0)");
+            } else if (y.signum() > 0) {
+                return PI(c).multiply(HALF);
+            } else {
+                return PI(c).multiply(HALF).negate();
+            }
+        } else if (x.signum() < 0) {
+            if (y.signum() == 0) {
+                return ZERO;
+            } else if (y.signum() > 0) {
+                return atan(y.divide(x, c), c).add(PI(c));
+            } else {
+                return atan(y.divide(x, c), c).subtract(PI(c));
+            }
+        } else {
+            return atan(y.divide(x, c), c);
+        }
+    }
+
+    private static final BigDecimal HALF_ANGLE_THRESHOLD = new BigDecimal("0.8");
+
+    private static BigDecimal atan(BigDecimal x, MathContext c) {
+        if (x.signum() < 0) {
+            return atan(x.negate(), c).negate();
+        }
+        if (x.compareTo(ONE) > 0) {
+            return PI(c).multiply(HALF).subtract(atan(ONE.divide(x, c), c));
+        }
+        if (x.compareTo(HALF_ANGLE_THRESHOLD) > 0) {
+            return TWO.multiply(atan(x.divide(
+                    sqrt(ONE.add(x.pow(2)), c).add(ONE), c), c));
+        }
+        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+
+        BigDecimal sq = x.pow(2, c).negate();
+
+        BigDecimal num = x;
+        BigDecimal sum = BigDecimal.ZERO;
+        BigDecimal term = x;
+
+        for (int i = 1; term.abs().compareTo(eps) > 0; i += 2) {
+            term = num.divide(BigDecimal.valueOf(i), c);
+            num = num.multiply(sq);
+            sum = sum.add(term, c);
+        }
+
+        return sum;
     }
 }

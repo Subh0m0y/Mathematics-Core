@@ -40,7 +40,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class BigMathTest {
     private static final int NTH_ROOT_LIMIT = 20;
-    private static final int PRECISION = 300;
+    private static final int PRECISION = 30;
     private static final int SCALE_LIMIT = 100;
     private static final int ROOT_LIMIT = 100;
     private static final MathContext CONTEXT = new MathContext(PRECISION, RoundingMode.HALF_EVEN);
@@ -107,6 +107,26 @@ public class BigMathTest {
             BigDecimal n = BigMath.pow(p, r, CONTEXT);
 
             assertTrue(n.round(CONTEXT).compareTo(x) == 0);
+        }
+    }
+
+    private static final int TAN_LIMIT = 100;
+    private static final BigDecimal PI = BigMath.PI(CONTEXT);
+    private static final BigDecimal PI_2 = PI.divide(BigDecimal.valueOf(2), CONTEXT);
+
+
+    @Test
+    public void testTanAndAtan2() throws Exception {
+        assertTrue(BigMath.atan2(BigDecimal.ONE, BigDecimal.ZERO, CONTEXT).round(CONTEXT)
+                .compareTo(PI_2) == 0);
+        for (int i = 0; i < TAN_LIMIT; i++) {
+            BigDecimal a = PI.multiply(BigDecimal.valueOf(RANDOM.nextDouble()));
+            a = a.subtract(PI_2, CONTEXT);
+
+            BigDecimal tan = BigMath.tan(a, CONTEXT);
+            BigDecimal inv = BigMath.arctan(tan, CONTEXT);
+
+            assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
         }
     }
 }
