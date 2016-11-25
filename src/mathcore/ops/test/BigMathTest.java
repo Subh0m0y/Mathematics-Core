@@ -114,7 +114,7 @@ public class BigMathTest {
         }
     }
 
-    private static final int TAN_LIMIT = 100;
+    private static final int TAN_LIMIT = 200;
     private static final BigDecimal PI = BigMath.PI(CONTEXT);
     private static final BigDecimal PI_2 = PI.divide(valueOf(2), CONTEXT);
 
@@ -134,7 +134,7 @@ public class BigMathTest {
         }
     }
 
-    private static final int RANGE = 1_000_000;
+    private static final int RANGE = 10_000;
 
     @Test
     public void testBasicSinAndCos() throws Exception {
@@ -168,18 +168,10 @@ public class BigMathTest {
             BigDecimal a = Helper.rangedValue(ZERO, PI, RANDOM);
             a = a.round(CONTEXT);
 
-            BigDecimal cos = BigMath.cos(a, CONTEXT);
+            BigDecimal cos = BigMath.cos(a, BigMath.expandContext(CONTEXT, PRECISION + 2));
             BigDecimal inv = BigMath.arccos(cos, CONTEXT);
 
-            System.out.println(a);
-            System.out.println(cos);
-            System.out.println(Math.cos(a.doubleValue()));
-            System.out.println(a.compareTo(PI_2));
-            System.out.println();
-
-            //assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
+            assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
         }
-        //0.0753607823765159188282596509874
-        //0.0753607823765159188282596509873400309
     }
 }
