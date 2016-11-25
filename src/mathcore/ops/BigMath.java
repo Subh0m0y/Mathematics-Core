@@ -215,7 +215,7 @@ public class BigMath {
         BigDecimal term = num.divide(den, context);
         BigDecimal sum = ONE;               // Accumulator
         // The tolerable error
-        BigDecimal eps = new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
+        BigDecimal eps = eps(context);
         long i = 1; // The factorial variable
         while (term.compareTo(eps) > 0) {
             term = num.divide(den, context);
@@ -252,7 +252,7 @@ public class BigMath {
     private static BigDecimal smallLog(BigDecimal x, MathContext c) {
         BigDecimal term = (x.subtract(ONE)).divide(x.add(ONE), c);
         BigDecimal sq = term.multiply(term, c);
-        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+        BigDecimal eps = eps(c);
 
         BigDecimal sum = term;  // The accumulator
         long den = 3;           // The denominator
@@ -303,7 +303,7 @@ public class BigMath {
         BigDecimal t = FOURTH;
         BigDecimal p = ONE;
 
-        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+        BigDecimal eps = eps(c);
 
         while (a.subtract(b).abs().compareTo(eps) > 0) {
             BigDecimal A = a.add(b).multiply(HALF, c);
@@ -317,6 +317,34 @@ public class BigMath {
     }
 
     public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
+        // Apply range reduction
+        BigDecimal pi = PI(context);
+        BigDecimal pi2 = pi.multiply(TWO);
+
+        while (x.signum() < 0) {
+            x = x.add(pi2);
+        }
+
+        // sin/cos(2pi*n + x) = sin/cos(x)
+        if (x.compareTo(pi2) >= 0) {
+            return sinAndCos(x.remainder(pi2), context);
+        }
+        // sin/cos(pi + x) = -sin/cos(x)
+        if (x.compareTo(pi) >= 0) {
+            BigDecimal[] v = sinAndCos(x.subtract(pi), context);
+            v[0] = v[0].negate();
+            v[1] = v[1].negate();
+            return v;
+        }
+
+        BigDecimal piB2 = pi.multiply(HALF);
+
+        // sin/cos(pi/2 + x) = cos/-sin(x)
+        if (x.compareTo(piB2) >= 0) {
+            BigDecimal[] v = sinAndCos(x.subtract(piB2), context);
+            return new BigDecimal[]{v[1], v[0].negate()};
+        }
+
         return sinCos(x, expandContext(context, context.getPrecision() + 2));
     }
 
@@ -338,43 +366,17 @@ public class BigMath {
     }
 
     /**
-     * Apply range reduction is applied for all values of x.
+     * Accepts only range-reduced values of x.
      */
     private static BigDecimal[] sinCos(BigDecimal x, MathContext c) {
-        // Apply range reduction
-
-        BigDecimal pi = PI(c);
-        BigDecimal pi2 = pi.multiply(TWO);
-
-        while (x.signum() < 0) {
-            x = x.add(pi2);
-        }
-
-        // sin/cos(2pi*n + x) = sin/cos(x)
-        if (x.compareTo(pi2) >= 0) {
-            return sinAndCos(x.remainder(pi2), c);
-        }
-        // sin/cos(pi + x) = -sin/cos(x)
-        if (x.compareTo(pi) >= 0) {
-            BigDecimal[] v = sinAndCos(x.subtract(pi), c);
-            v[0] = v[0].negate();
-            v[1] = v[1].negate();
-            return v;
-        }
-
-        BigDecimal piB2 = pi.multiply(HALF);
-        // sin/cos(pi/2 + x) = cos/-sin(x)
-        if (x.compareTo(piB2) >= 0) {
-            BigDecimal[] v = sinAndCos(x.subtract(piB2), c);
-            return new BigDecimal[]{v[1], v[0].negate()};
-        }
-
-        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+        BigDecimal eps = eps(c);
 
         BigDecimal term = ONE;
         BigDecimal sin = ZERO;
         BigDecimal cos = ONE;
 
+        // Iterate through all the powers of x and add or subtract to the
+        // corresponding variable.
         for (int i = 1; term.abs().compareTo(eps) > 0; i++) {
             term = term.multiply(x).divide(BigDecimal.valueOf(i), c);
             switch (i % 4) {
@@ -457,7 +459,7 @@ public class BigMath {
             return TWO.multiply(atan(x.divide(
                     sqrt(ONE.add(x.pow(2)), c).add(ONE), c), c));
         }
-        BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
+        BigDecimal eps = eps(c);
 
         BigDecimal sq = x.pow(2, c).negate();
 
@@ -472,5 +474,9 @@ public class BigMath {
         }
 
         return sum;
+    }
+
+    private static BigDecimal eps(MathContext context) {
+        return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
 }
