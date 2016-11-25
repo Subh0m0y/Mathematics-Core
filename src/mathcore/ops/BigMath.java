@@ -317,9 +317,6 @@ public class BigMath {
     }
 
     public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
-        // Restrict the domain first
-        x = x.remainder(PI(context).multiply(HALF));
-
         return sinCos(x, expandContext(context, context.getPrecision() + 2));
     }
 
@@ -341,10 +338,37 @@ public class BigMath {
     }
 
     /**
-     * Works only for restricted values of x. Restriction is within the interval
-     * -pi/2 to +pi/2.
+     * Apply range reduction is applied for all values of x.
      */
     private static BigDecimal[] sinCos(BigDecimal x, MathContext c) {
+        // Apply range reduction
+
+        BigDecimal pi = PI(c);
+        BigDecimal pi2 = pi.multiply(TWO);
+
+        while (x.signum() < 0) {
+            x = x.add(pi2);
+        }
+
+        // sin/cos(2pi*n + x) = sin/cos(x)
+        if (x.compareTo(pi2) >= 0) {
+            return sinAndCos(x.remainder(pi2), c);
+        }
+        // sin/cos(pi + x) = -sin/cos(x)
+        if (x.compareTo(pi) >= 0) {
+            BigDecimal[] v = sinAndCos(x.subtract(pi), c);
+            v[0] = v[0].negate();
+            v[1] = v[1].negate();
+            return v;
+        }
+
+        BigDecimal piB2 = pi.multiply(HALF);
+        // sin/cos(pi/2 + x) = cos/-sin(x)
+        if (x.compareTo(piB2) >= 0) {
+            BigDecimal[] v = sinAndCos(x.subtract(piB2), c);
+            return new BigDecimal[]{v[1], v[0].negate()};
+        }
+
         BigDecimal eps = new BigDecimal(BigInteger.ONE, c.getPrecision() + 1);
 
         BigDecimal term = ONE;
@@ -372,12 +396,24 @@ public class BigMath {
     }
 
     public static BigDecimal arcsin(BigDecimal z, MathContext context) {
-        if (z.abs().compareTo(ONE) == 0) {
+        int cmp = z.abs().compareTo(ONE);
+        if (cmp > 0) {
+            throw new ArithmeticException("Illegal argument for arcsine: |z| > 1");
+        } else if (cmp == 0) {
             BigDecimal result = PI(context).multiply(HALF);
             return z.signum() > 0 ? result : result.negate();
         }
-        MathContext c = expandContext(context, context.getPrecision() + 1);
+        MathContext c = expandContext(context, context.getPrecision() + 2);
         return arctan(z.divide(sqrt(ONE.subtract(z.pow(2)), c), c), context);
+    }
+
+    public static BigDecimal arccos(BigDecimal z, MathContext context) {
+        if (z.abs().compareTo(ONE) > 0) {
+            throw new ArithmeticException("Illegal argument for arccosine: |z| > 1");
+        }
+        BigDecimal x = sqrt(ONE.subtract(z.pow(2)), context);
+        BigDecimal arcsin = arcsin(x, context);
+        return z.signum() < 0 ? PI(context).subtract(arcsin) : arcsin;
     }
 
     public static BigDecimal arctan(BigDecimal z, MathContext context) {

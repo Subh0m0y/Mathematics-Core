@@ -32,6 +32,8 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Random;
 
+import static java.math.BigDecimal.*;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 /**
@@ -40,7 +42,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class BigMathTest {
     private static final int NTH_ROOT_LIMIT = 20;
-    private static final int PRECISION = 30;
+    private static final int PRECISION = 20;
     private static final int SCALE_LIMIT = 100;
     private static final int ROOT_LIMIT = 100;
     private static final MathContext CONTEXT = new MathContext(PRECISION, RoundingMode.HALF_EVEN);
@@ -49,7 +51,7 @@ public class BigMathTest {
     @Test
     public void testPrincipalRoot() throws Exception {
         for (int i = 0; i < NTH_ROOT_LIMIT; i++) {
-            BigDecimal a = Helper.generateRandom(PRECISION, SCALE_LIMIT, RANDOM);
+            BigDecimal a = Helper.scaledPositive(PRECISION, SCALE_LIMIT, RANDOM);
             int n = RANDOM.nextInt(ROOT_LIMIT - 2) + 2;
 
             BigDecimal root = BigMath.principalRoot(a, n, CONTEXT);
@@ -61,10 +63,12 @@ public class BigMathTest {
     private static final int EXP_LOG_LIMIT = 1000;
     private static final int EXP_LIMIT = 1000;
 
+    private static final BigDecimal EXP_LIM = valueOf(EXP_LIMIT);
+
     @Test
     public void testExpLog() throws Exception {
         for (int i = 0; i < EXP_LOG_LIMIT; i++) {
-            BigDecimal a = new BigDecimal(RANDOM.nextInt(EXP_LIMIT) + RANDOM.nextDouble());
+            BigDecimal a = Helper.rangedValue(ZERO, EXP_LIM, RANDOM);
             if (RANDOM.nextBoolean()) a = a.negate();
             a = a.round(CONTEXT);
 
@@ -80,8 +84,8 @@ public class BigMathTest {
     @Test
     public void testLogExp() throws Exception {
         for (int i = 0; i < LOG_EXP_LIMIT; i++) {
-            BigDecimal a = Helper.generateRandom(PRECISION, SCALE_LIMIT, RANDOM);
-            a = a.add(BigDecimal.ONE, CONTEXT);
+            BigDecimal a = Helper.scaledPositive(PRECISION, SCALE_LIMIT, RANDOM);
+            a = a.add(ONE, CONTEXT);
 
             BigDecimal l = BigMath.log(a, CONTEXT);
             BigDecimal e = BigMath.exp(l, CONTEXT);
@@ -96,14 +100,14 @@ public class BigMathTest {
     @Test
     public void testPow() throws Exception {
         for (int i = 0; i < POW_LIMIT; i++) {
-            BigDecimal x = Helper.generateRandom(PRECISION, 1, RANDOM);
-            x = x.add(BigDecimal.ONE, CONTEXT);
+            BigDecimal x = Helper.scaledPositive(PRECISION, 1, RANDOM);
+            x = x.add(ONE, CONTEXT);
 
             BigDecimal y = new BigDecimal(RANDOM.nextInt(POW_VAL_LIMIT) + RANDOM.nextDouble());
             if (RANDOM.nextBoolean()) y = y.negate();
 
             BigDecimal p = BigMath.pow(x, y, CONTEXT);
-            BigDecimal r = BigDecimal.ONE.divide(y, BigMath.expandContext(CONTEXT, (int) (PRECISION * 1.2)));
+            BigDecimal r = ONE.divide(y, BigMath.expandContext(CONTEXT, (int) (PRECISION * 1.2)));
             BigDecimal n = BigMath.pow(p, r, CONTEXT);
 
             assertTrue(n.round(CONTEXT).compareTo(x) == 0);
@@ -112,21 +116,70 @@ public class BigMathTest {
 
     private static final int TAN_LIMIT = 100;
     private static final BigDecimal PI = BigMath.PI(CONTEXT);
-    private static final BigDecimal PI_2 = PI.divide(BigDecimal.valueOf(2), CONTEXT);
+    private static final BigDecimal PI_2 = PI.divide(valueOf(2), CONTEXT);
 
 
     @Test
     public void testTanAndAtan2() throws Exception {
-        assertTrue(BigMath.atan2(BigDecimal.ONE, BigDecimal.ZERO, CONTEXT).round(CONTEXT)
+        assertTrue(BigMath.atan2(ONE, ZERO, CONTEXT).round(CONTEXT)
                 .compareTo(PI_2) == 0);
         for (int i = 0; i < TAN_LIMIT; i++) {
-            BigDecimal a = PI.multiply(BigDecimal.valueOf(RANDOM.nextDouble()));
-            a = a.subtract(PI_2, CONTEXT);
+            BigDecimal a = Helper.rangedValue(PI_2.negate(), PI_2, RANDOM);
+            a = a.round(CONTEXT);
 
             BigDecimal tan = BigMath.tan(a, CONTEXT);
             BigDecimal inv = BigMath.arctan(tan, CONTEXT);
 
             assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
         }
+    }
+
+    private static final int RANGE = 1_000_000;
+
+    @Test
+    public void testBasicSinAndCos() throws Exception {
+        for (int i = -RANGE; i <= RANGE; i++) {
+            BigDecimal[] v = BigMath.sinAndCos(BigDecimal.valueOf(i), CONTEXT);
+            assertEquals(Math.sin(i), v[0].doubleValue(), 1e-8);
+            assertEquals(Math.cos(i), v[1].doubleValue(), 1e-8);
+        }
+    }
+
+    private static final int SIN_LIMIT = TAN_LIMIT;
+
+    @Test
+    public void testSinAndArcsin() throws Exception {
+        for (int i = 0; i < SIN_LIMIT; i++) {
+            BigDecimal a = Helper.rangedValue(PI_2.negate(), PI_2, RANDOM);
+            a = a.round(CONTEXT);
+
+            BigDecimal sin = BigMath.sin(a, CONTEXT);
+            BigDecimal inv = BigMath.arcsin(sin, CONTEXT);
+
+            assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
+        }
+    }
+
+    private static final int COS_LIMIT = TAN_LIMIT;
+
+    @Test
+    public void testCosAndArccos() throws Exception {
+        for (int i = 0; i < COS_LIMIT; i++) {
+            BigDecimal a = Helper.rangedValue(ZERO, PI, RANDOM);
+            a = a.round(CONTEXT);
+
+            BigDecimal cos = BigMath.cos(a, CONTEXT);
+            BigDecimal inv = BigMath.arccos(cos, CONTEXT);
+
+            System.out.println(a);
+            System.out.println(cos);
+            System.out.println(Math.cos(a.doubleValue()));
+            System.out.println(a.compareTo(PI_2));
+            System.out.println();
+
+            //assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
+        }
+        //0.0753607823765159188282596509874
+        //0.0753607823765159188282596509873400309
     }
 }
