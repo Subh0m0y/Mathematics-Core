@@ -145,6 +145,16 @@ public class BigMathTest {
         }
     }
 
+    @Test
+    public void testBasicTanAndAtan() throws Exception {
+        for (int i = -RANGE; i <= RANGE; i++) {
+            BigDecimal tan = BigMath.tan(BigDecimal.valueOf(i), CONTEXT);
+            BigDecimal atn = BigMath.arctan(BigDecimal.valueOf(i), CONTEXT);
+            assertEquals(Math.tan(i), tan.doubleValue(), 1e-8);
+            assertEquals(Math.atan(i), atn.doubleValue(), 1e-8);
+        }
+    }
+
     private static final int SIN_LIMIT = TAN_LIMIT;
 
     @Test

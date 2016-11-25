@@ -358,6 +358,9 @@ public class BigMath {
 
     public static BigDecimal tan(BigDecimal x, MathContext context) {
         MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
+        if (x.signum() == 0) {
+            return ZERO;
+        }
         if (x.remainder(PI(c).multiply(HALF)).signum() == 0) {
             throw new ArithmeticException("Tan undefined at multiples of pi/2.");
         }
@@ -426,14 +429,16 @@ public class BigMath {
             throws ArithmeticException {
         MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
         if (x.signum() == 0) {
-            if (y.signum() == 0) {
+            // The exceptional cases
+            if (y.signum() == 0) {          // 0/0
                 throw new ArithmeticException("Undefined: atan2(0,0)");
-            } else if (y.signum() > 0) {
+            } else if (y.signum() > 0) {    // +infinity
                 return PI(c).multiply(HALF);
-            } else {
+            } else {                        // -infinity
                 return PI(c).multiply(HALF).negate();
             }
         } else if (x.signum() < 0) {
+            // Negative values
             if (y.signum() == 0) {
                 return ZERO;
             } else if (y.signum() > 0) {
@@ -442,26 +447,39 @@ public class BigMath {
                 return atan(y.divide(x, c), c).subtract(PI(c));
             }
         } else {
+            // The normal case
             return atan(y.divide(x, c), c);
         }
     }
 
     private static final BigDecimal HALF_ANGLE_THRESHOLD = new BigDecimal("0.8");
 
+    /**
+     * Returns the arctangent of the given BigDecimal. It works only for
+     * finite values (for infinity, use atan2)
+     *
+     * @param x The argument.
+     * @param c The expanded MathContext.
+     * @return The arctangent of the given BigDecimal.
+     */
     private static BigDecimal atan(BigDecimal x, MathContext c) {
+        // atan(-x) = -atan(x)
         if (x.signum() < 0) {
             return atan(x.negate(), c).negate();
         }
+        // The Taylor series becomes horribly slow for values ~ 1.
         if (x.compareTo(ONE) > 0) {
             return PI(c).multiply(HALF).subtract(atan(ONE.divide(x, c), c));
         }
+        // Even at 1, atan is horribly slow, so reduce the argument
+        // to a smaller value.
         if (x.compareTo(HALF_ANGLE_THRESHOLD) > 0) {
             return TWO.multiply(atan(x.divide(
                     sqrt(ONE.add(x.pow(2)), c).add(ONE), c), c));
         }
         BigDecimal eps = eps(c);
 
-        BigDecimal sq = x.pow(2, c).negate();
+        BigDecimal minusXSquared = x.pow(2, c).negate();
 
         BigDecimal num = x;
         BigDecimal sum = BigDecimal.ZERO;
@@ -469,13 +487,19 @@ public class BigMath {
 
         for (int i = 1; term.abs().compareTo(eps) > 0; i += 2) {
             term = num.divide(BigDecimal.valueOf(i), c);
-            num = num.multiply(sq);
+            num = num.multiply(minusXSquared);
             sum = sum.add(term, c);
         }
 
         return sum;
     }
 
+    /**
+     * Returns the epsilon required for the specified context.
+     *
+     * @param context The context to generate the epsilon for.
+     * @return The required epsilon.
+     */
     private static BigDecimal eps(MathContext context) {
         return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
