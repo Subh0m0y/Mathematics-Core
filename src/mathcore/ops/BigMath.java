@@ -36,7 +36,11 @@ import static java.math.BigDecimal.*;
  * the amount of precision needed.
  * <p>
  * For accuracy reasons, the precision used internally in the algorithms is
- * actually a few digits more than specified.
+ * actually a few digits more than specified. The same approach is encouraged
+ * for practical computations as well, to allow room for rounding errors that
+ * accumulate in a series of calculations. This means, use an expanded
+ * {@link MathContext} for the intermediate calculations and obtain the
+ * final answer with the desired MathContext. Use {@link #expandContext(MathContext, int)}
  *
  * @author Subhomoy Haldar
  * @version 1.0
@@ -226,6 +230,15 @@ public class BigMath {
         return sum;
     }
 
+    /**
+     * Calculates the natural logarithm of all positive values of x (i.e.
+     * non-zero and non-negative).
+     *
+     * @param x       The positive argument.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The natural logarithm of x.
+     * @throws ArithmeticException If x is zero or negative.
+     */
     public static BigDecimal log(BigDecimal x, MathContext context)
             throws ArithmeticException {
         if (x.signum() <= 0) {
@@ -240,7 +253,7 @@ public class BigMath {
             x = x.divide(E, c);
             intExp = intExp.add(ONE);
         }
-        // Correction for arguments that are too small
+        // Correction for subnormal arguments
         while (x.compareTo(ONE) < 0) {
             x = x.multiply(E, c);
             intExp = intExp.subtract(ONE);
@@ -249,6 +262,13 @@ public class BigMath {
         return intExp.add(smallLog(x, c), c);
     }
 
+    /**
+     * Returns the natural logarithm of "small", normalized values of x.
+     *
+     * @param x The normalized argument.
+     * @param c The expanded MathContext.
+     * @return The natural logarithm of "small", normalized values of x.
+     */
     private static BigDecimal smallLog(BigDecimal x, MathContext c) {
         BigDecimal term = (x.subtract(ONE)).divide(x.add(ONE), c);
         BigDecimal sq = term.multiply(term, c);

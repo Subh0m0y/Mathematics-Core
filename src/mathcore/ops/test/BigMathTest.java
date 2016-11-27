@@ -184,4 +184,32 @@ public class BigMathTest {
             assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
         }
     }
+
+    @Test
+    public void testSqrt() throws Exception {
+        for (int i = 0; i < NTH_ROOT_LIMIT; i++) {
+            BigDecimal a = Helper.scaledPositive(PRECISION, SCALE_LIMIT, RANDOM);
+            a = a.round(CONTEXT);
+
+            BigDecimal sqrt = BigMath.sqrt(a, CONTEXT);
+
+            assertTrue(a.compareTo(sqrt.pow(2, CONTEXT)) == 0);
+        }
+    }
+
+    @Test
+    public void testE() throws Exception {
+        assertEquals(
+                "2.718281828459045235360287471352662497761",
+                BigMath.E(new MathContext(40, RoundingMode.HALF_EVEN)).toString()
+        );
+    }
+
+    @Test
+    public void testPI() throws Exception {
+        assertEquals(
+                "3.141592653589793238462643383279502884197",
+                BigMath.PI(new MathContext(40, RoundingMode.HALF_EVEN)).toString()
+        );
+    }
 }
