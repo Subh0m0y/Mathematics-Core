@@ -8,6 +8,7 @@ import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 import static java.math.BigDecimal.valueOf;
 import static mathcore.ops.BigMath.expandContext;
+import static mathcore.ops.BigMath.log;
 import static mathcore.ops.test.Helper.eps;
 
 /**
@@ -35,7 +36,7 @@ class Exponential {
     static BigDecimal E(MathContext context) {
         if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
             return E_40.round(context);
-        return Exponential.smallExp(ONE, context);
+        return smallExp(ONE, context);
     }
 
     /**
@@ -90,7 +91,7 @@ class Exponential {
 
         // If the integral part is too large, an exception maybe thrown.
         BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
-                Exponential.smallExp(fraction, c), c
+                smallExp(fraction, c), c
         );
 
         return x.signum() < 0 ? ONE.divide(exp, c) : exp;
@@ -126,7 +127,7 @@ class Exponential {
         int p = abs.toBigInteger().intValueExact();
         BigDecimal f = abs.remainder(ONE);
 
-        BigDecimal v = x.pow(p).multiply(exp(f.multiply(Logarithm.log(x, c)), c));
+        BigDecimal v = x.pow(p).multiply(exp(f.multiply(log(x, c)), c));
 
         // Finally tackle the sign
         return y.signum() < 0 ? ONE.divide(v, c) : v;
