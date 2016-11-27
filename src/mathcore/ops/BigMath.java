@@ -25,10 +25,10 @@
 package mathcore.ops;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 
 import static java.math.BigDecimal.*;
+import static mathcore.ops.test.Helper.eps;
 
 /**
  * Provides implementations for commonly used mathematical functions. All
@@ -63,7 +63,7 @@ public class BigMath {
     public static BigDecimal sqrt(final BigDecimal decimal,
                                   final MathContext context)
             throws ArithmeticException {
-        return principalRoot(decimal, 2, context);
+        return Roots.principalRoot(decimal, 2, context);
     }
 
     /**
@@ -77,67 +77,8 @@ public class BigMath {
      */
     public static BigDecimal principalRoot(final BigDecimal decimal,
                                            final int n,
-                                           final MathContext context)
-            throws ArithmeticException {
-        if (n < 2)
-            throw new ArithmeticException("'n' must at least be 2.");
-        // Quick exits
-        if (decimal.signum() == 0)
-            return ZERO;
-        if (decimal.compareTo(ONE) == 0)
-            return ONE;
-        if (decimal.signum() < 0)
-            throw new ArithmeticException("Only positive values are supported.");
-        return nthRoot(decimal, n, context);
-    }
-
-    /**
-     * Uses the n-th root algorithm to find principal root of a verified value.
-     *
-     * @param a  The value whose n-th root is sought.
-     * @param n  The root to find.
-     * @param c0 The initial (unexpanded) MathContext.
-     * @return The required principal root.
-     */
-    private static BigDecimal nthRoot(final BigDecimal a,
-                                      final int n,
-                                      final MathContext c0) {
-        // Obtain constants that will be used in every iteration
-        final BigDecimal N = valueOf(n);
-        final int n_1 = n - 1;
-
-        // Increase precision by "n";
-        final int newPrecision = c0.getPrecision() + n;
-
-        final MathContext c = expandContext(c0, newPrecision);
-
-        // The iteration limit (quadratic convergence)
-        final int limit = n * n * (31 - Integer.numberOfLeadingZeros(newPrecision)) >>> 1;
-
-        // Make an initial guess:
-
-        // 1. Obtain first (1/n)th of total bits of magnitude
-        BigInteger magnitude = a.unscaledValue();
-        final int length = magnitude.bitLength() * n_1 / n;
-        magnitude = magnitude.shiftRight(length);
-
-        // 2. Obtain the correct scale
-        final int newScale = a.scale() / n;
-
-        // 3. Construct the initial guess
-        BigDecimal x = new BigDecimal(magnitude, newScale);
-        BigDecimal x0;
-
-        // Iterate
-        for (int i = 0; i < limit; i++) {
-            x0 = x;
-            BigDecimal delta = a.divide(x0.pow(n_1), c)
-                    .subtract(x0, c)
-                    .divide(N, c);
-            x = x0.add(delta, c);
-        }
-
-        return x.round(c);
+                                           final MathContext context) {
+        return Roots.principalRoot(decimal, n, context);
     }
 
     /**
@@ -157,8 +98,6 @@ public class BigMath {
         );
     }
 
-    private static final BigDecimal E_40 = new BigDecimal("2.718281828459045235360287471352662497761");
-
     /**
      * Returns the value of {@code e}, or Euler's constant, the base of the natural logarithm
      * with the specified precision.
@@ -167,9 +106,7 @@ public class BigMath {
      * @return The value of e with the desired precision.
      */
     public static BigDecimal E(MathContext context) {
-        if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
-            return E_40.round(context);
-        return smallExp(ONE, context);
+        return ExpLog.E(context);
     }
 
     /**
@@ -182,52 +119,7 @@ public class BigMath {
      */
     public static BigDecimal exp(BigDecimal x, MathContext context)
             throws ArithmeticException {
-        // Quick exit
-        if (x.signum() == 0) return ONE;
-
-        // Perform the calculations with a bigger context
-        int newPrecision = (int) (context.getPrecision() * 1.2);
-        MathContext c = expandContext(context, newPrecision);
-        // The value of e for the integral portion
-        BigDecimal E = E(c);
-        BigDecimal abs = x.abs();
-        BigInteger intExp = abs.toBigInteger();
-        BigDecimal fraction = abs.subtract(new BigDecimal(intExp));
-
-        // If the integral part is too large, an exception maybe thrown.
-        BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
-                smallExp(fraction, c), c
-        );
-
-        return x.signum() < 0 ? ONE.divide(exp, c) : exp;
-    }
-
-    /**
-     * Uses the Taylor series to approximate exp() for small values of x.
-     *
-     * @param x       A small positive argument (less than e).
-     * @param context The The MathContext to specify the precision and RoundingMode.
-     * @return exp(x) for small positive value of x.
-     */
-    private static BigDecimal smallExp(BigDecimal x, MathContext context) {
-        // Quick exit
-        if (x.signum() == 0) return ONE;
-
-        BigDecimal num = x;                 // Numerator
-        BigDecimal den = ONE;               // Denominator
-        // The actual of result of num/den
-        BigDecimal term = num.divide(den, context);
-        BigDecimal sum = ONE;               // Accumulator
-        // The tolerable error
-        BigDecimal eps = eps(context);
-        long i = 1; // The factorial variable
-        while (term.compareTo(eps) > 0) {
-            term = num.divide(den, context);
-            sum = sum.add(term, context);
-            den = den.multiply(valueOf(++i));
-            num = num.multiply(x);
-        }
-        return sum;
+        return ExpLog.exp(x, context);
     }
 
     /**
@@ -241,49 +133,7 @@ public class BigMath {
      */
     public static BigDecimal log(BigDecimal x, MathContext context)
             throws ArithmeticException {
-        if (x.signum() <= 0) {
-            throw new ArithmeticException("Invalid value: can't handle 0 and negatives.");
-        }
-        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.5));
-        BigDecimal E = E(c);
-        BigDecimal intExp = ZERO;
-
-        // Work out the integral part of the exponent
-        while (x.compareTo(E) > 0) {
-            x = x.divide(E, c);
-            intExp = intExp.add(ONE);
-        }
-        // Correction for subnormal arguments
-        while (x.compareTo(ONE) < 0) {
-            x = x.multiply(E, c);
-            intExp = intExp.subtract(ONE);
-        }
-
-        return intExp.add(smallLog(x, c), c);
-    }
-
-    /**
-     * Returns the natural logarithm of "small", normalized values of x.
-     *
-     * @param x The normalized argument.
-     * @param c The expanded MathContext.
-     * @return The natural logarithm of "small", normalized values of x.
-     */
-    private static BigDecimal smallLog(BigDecimal x, MathContext c) {
-        BigDecimal term = (x.subtract(ONE)).divide(x.add(ONE), c);
-        BigDecimal sq = term.multiply(term, c);
-        BigDecimal eps = eps(c);
-
-        BigDecimal sum = term;  // The accumulator
-        long den = 3;           // The denominator
-
-        while (term.compareTo(eps) > 0) {
-            term = term.multiply(sq, c);
-            sum = sum.add(term.divide(valueOf(den), c));
-            den += 2;
-        }
-
-        return sum.add(sum, c); // The final multiplication by 2
+        return ExpLog.log(x, context);
     }
 
     /**
@@ -302,70 +152,21 @@ public class BigMath {
     public static BigDecimal pow(BigDecimal x,
                                  BigDecimal y,
                                  MathContext context) {
-        // Quick exits
-        if (x.signum() < 0) {
-            throw new ArithmeticException("Negative numbers not supported.");
-        }
-        if (x.signum() == 0) {
-            return ZERO;
-        }
-        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
-
-        // Tackle the integral and the fractional part separately
-        BigDecimal abs = y.abs();
-        int p = abs.toBigInteger().intValueExact();
-        BigDecimal f = abs.remainder(ONE);
-
-        BigDecimal v = x.pow(p).multiply(exp(f.multiply(log(x, c)), c));
-
-        // Finally tackle the sign
-        return y.signum() < 0 ? ONE.divide(v, c) : v;
+        return ExpLog.pow(x, y, context);
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
-    private static final BigDecimal FOUR = BigDecimal.valueOf(4);
-
     private static final BigDecimal HALF = new BigDecimal("0.5");
-    private static final BigDecimal FOURTH = new BigDecimal("0.25");
 
-    private static final BigDecimal PI_40 = new BigDecimal("3.141592653589793238462643383279502884197");
-
+    /**
+     * Computes the value of the circle constant: &pi; (pi) as per the
+     * specified MathContext.
+     *
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The value of pi with the required precision.
+     */
     public static BigDecimal PI(MathContext context) {
-        if (context.getPrecision() <= 0) {
-            return PI_40.round(context);
-        }
-
-        // Use the AGM algorithm (aka Gauss–Legendre algorithm)
-        // https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_algorithm
-
-        MathContext c = expandContext(context, context.getPrecision() + 1);
-
-        BigDecimal a = ONE;
-        BigDecimal b = ONE.divide(sqrt(TWO, c), c);
-        BigDecimal t = FOURTH;
-        BigDecimal p = ONE;
-
-        BigDecimal eps = eps(c);
-
-        while (a.subtract(b).abs().compareTo(eps) > 0) {
-            // The basic steps are:
-            // 1. A.M. = (a + b) / 2
-            // 2. G.M. = sqrt(a * b)
-            // 3. t = t - p * (A.M. - a)^2
-            // 4. p = 2 * p
-            // 5. a = A.M.
-            // 6. b = G.M.
-            // Repeat until a and b are equal (within context)
-            BigDecimal A = a.add(b).multiply(HALF, c);
-            b = BigMath.sqrt(a.multiply(b), c);
-            t = t.subtract(p.multiply(A.subtract(a).pow(2)), c);
-            p = p.add(p);
-            a = A;
-        }
-        //      (a + b)^2
-        // pi = ---------
-        //          4t
-        return a.add(b).pow(2).divide(FOUR.multiply(t), context);
+        return CircleConstant.PI(context);
     }
 
     private static final BigDecimal ONE80 = BigDecimal.valueOf(180);
@@ -394,6 +195,21 @@ public class BigMath {
         return radians.multiply(ONE80).divide(PI(context), context);
     }
 
+    /**
+     * Calculates the sine and cosine of the given value (in radians) at
+     * the same time. The first element in the array is the sine and the
+     * second element is the cosine.
+     * <p>
+     * This method is useful because the taylor series of sin and cos are
+     * complementary and calculating them together is often faster than
+     * calculating each separately.
+     * <p>
+     * This method works for all values of x.
+     *
+     * @param x       The argument (in radians).
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The sine and cosine of x.
+     */
     public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
         // Apply range reduction
         BigDecimal pi = PI(context);
@@ -576,15 +392,5 @@ public class BigMath {
         }
 
         return sum;
-    }
-
-    /**
-     * Returns the epsilon required for the specified context.
-     *
-     * @param context The context to generate the epsilon for.
-     * @return The required epsilon.
-     */
-    private static BigDecimal eps(MathContext context) {
-        return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
 }

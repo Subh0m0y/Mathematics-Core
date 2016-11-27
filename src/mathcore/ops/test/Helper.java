@@ -26,6 +26,7 @@ package mathcore.ops.test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.util.Random;
 
 /**
@@ -54,7 +55,7 @@ public class Helper {
      * @param random     The Random used to generate the magnitude and scale.
      * @return A positive
      */
-    public static BigDecimal scaledPositive(int precision,
+    static BigDecimal scaledPositive(int precision,
                                             int scaleLimit,
                                             Random random) {
         int bitCount = (int) (Math.log(precision) * LOG2_INV + 1);
@@ -74,11 +75,21 @@ public class Helper {
      * @param random The Random used to generate the fraction.
      * @return A new BigDecimal that lies within the specified range.
      */
-    public static BigDecimal rangedValue(BigDecimal lower,
+    static BigDecimal rangedValue(BigDecimal lower,
                                          BigDecimal upper,
                                          Random random) {
         BigDecimal difference = upper.subtract(lower);
         BigDecimal fraction = BigDecimal.valueOf(random.nextDouble());
         return lower.add(difference.multiply(fraction));
+    }
+
+    /**
+     * Returns the epsilon required for the specified context.
+     *
+     * @param context The context to generate the epsilon for.
+     * @return The required epsilon.
+     */
+    public static BigDecimal eps(MathContext context) {
+        return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
 }
