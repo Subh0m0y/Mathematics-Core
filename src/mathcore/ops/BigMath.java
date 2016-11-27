@@ -526,8 +526,14 @@ public class BigMath {
         // Even at 1, atan is horribly slow, so reduce the argument
         // to a smaller value.
         if (x.compareTo(HALF_ANGLE_THRESHOLD) > 0) {
-            return TWO.multiply(atan(x.divide(
-                    sqrt(ONE.add(x.pow(2)), c).add(ONE), c), c));
+            BigDecimal part = ONE.add(x.pow(2));
+            BigDecimal den = sqrt(part, c).add(ONE);
+
+            //                 x
+            // newX =  -----------------
+            //         sqrt(1 + x^2) + 1
+            BigDecimal newX = x.divide(den, c);
+            return TWO.multiply(atan(newX, c));
         }
         BigDecimal eps = eps(c);
 
