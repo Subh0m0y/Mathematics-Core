@@ -42,7 +42,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class BigMathTest {
     private static final int NTH_ROOT_LIMIT = 20;
-    private static final int PRECISION = 20;
+    private static final int PRECISION = 30;
     private static final int SCALE_LIMIT = 100;
     private static final int ROOT_LIMIT = 100;
     private static final MathContext CONTEXT = new MathContext(PRECISION, RoundingMode.HALF_EVEN);
@@ -135,13 +135,14 @@ public class BigMathTest {
     }
 
     private static final int RANGE = 10_000;
+    private static final double EPS = 1e-8;
 
     @Test
     public void testBasicSinAndCos() throws Exception {
         for (int i = -RANGE; i <= RANGE; i++) {
             BigDecimal[] v = BigMath.sinAndCos(BigDecimal.valueOf(i), CONTEXT);
-            assertEquals(Math.sin(i), v[0].doubleValue(), 1e-8);
-            assertEquals(Math.cos(i), v[1].doubleValue(), 1e-8);
+            assertEquals(Math.sin(i), v[0].doubleValue(), EPS);
+            assertEquals(Math.cos(i), v[1].doubleValue(), EPS);
         }
     }
 
@@ -211,5 +212,17 @@ public class BigMathTest {
                 "3.141592653589793238462643383279502884197",
                 BigMath.PI(new MathContext(40, RoundingMode.HALF_EVEN)).toString()
         );
+    }
+
+    @Test
+    public void testToDegreesAndToRadians() throws Exception {
+        MathContext context = BigMath.expandContext(CONTEXT, PRECISION + 2);
+        for (int i = -RANGE; i < RANGE; i++) {
+            BigDecimal val = BigDecimal.valueOf(i);
+            BigDecimal rad = BigMath.toRadians(val, context);
+            BigDecimal deg = BigMath.toDegrees(rad, CONTEXT);
+            assertEquals(Math.toRadians(i), rad.doubleValue(), EPS);
+            assertTrue(deg.compareTo(val) == 0);
+        }
     }
 }

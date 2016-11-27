@@ -368,6 +368,32 @@ public class BigMath {
         return a.add(b).pow(2).divide(FOUR.multiply(t), context);
     }
 
+    private static final BigDecimal ONE80 = BigDecimal.valueOf(180);
+
+    /**
+     * Converts the given value in degrees to radians.
+     *
+     * @param degrees The angle to convert.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The required angle in radians.
+     */
+    public static BigDecimal toRadians(BigDecimal degrees,
+                                       MathContext context) {
+        return degrees.multiply(PI(context)).divide(ONE80, context);
+    }
+
+    /**
+     * Converts the given value in radians to degrees.
+     *
+     * @param radians The angle to convert.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The required angle in degrees.
+     */
+    public static BigDecimal toDegrees(BigDecimal radians,
+                                       MathContext context) {
+        return radians.multiply(ONE80).divide(PI(context), context);
+    }
+
     public static BigDecimal[] sinAndCos(BigDecimal x, MathContext context) {
         // Apply range reduction
         BigDecimal pi = PI(context);
