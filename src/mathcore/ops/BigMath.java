@@ -178,7 +178,7 @@ public class BigMath {
      * @param x       The power to raise e to.
      * @param context The MathContext to specify the precision and RoundingMode.
      * @return The required value of e<sup>x</sup>.
-     * @throws ArithmeticException If abs(x) is too big (bigger than {@link Integer#MAX_VALUE}).
+     * @throws ArithmeticException If abs(x) is too big (bigger than 999999999).
      */
     public static BigDecimal exp(BigDecimal x, MathContext context)
             throws ArithmeticException {
@@ -286,18 +286,40 @@ public class BigMath {
         return sum.add(sum, c); // The final multiplication by 2
     }
 
+    /**
+     * Raises the given bass to the specified exponent. All values of y are
+     * supported in the range [-999999999, 999999999]. (This is because of
+     * the limitation imposed by {@link BigDecimal#pow(int)} internally.)
+     * <p>
+     * NOTE: Only positive values of x (the base) are supported.
+     *
+     * @param x       The base.
+     * @param y       The exponent.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The base raised to the given exponent.
+     * @throws ArithmeticException If x is negative or y is too big.
+     */
     public static BigDecimal pow(BigDecimal x,
                                  BigDecimal y,
                                  MathContext context) {
+        // Quick exits
+        if (x.signum() < 0) {
+            throw new ArithmeticException("Negative numbers not supported.");
+        }
+        if (x.signum() == 0) {
+            return ZERO;
+        }
         MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
 
+        // Tackle the integral and the fractional part separately
         BigDecimal abs = y.abs();
         int p = abs.toBigInteger().intValueExact();
         BigDecimal f = abs.remainder(ONE);
 
         BigDecimal v = x.pow(p).multiply(exp(f.multiply(log(x, c)), c));
 
-        return x.signum() < 0 ? ONE.divide(v, c) : v;
+        // Finally tackle the sign
+        return y.signum() < 0 ? ONE.divide(v, c) : v;
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
@@ -326,13 +348,23 @@ public class BigMath {
         BigDecimal eps = eps(c);
 
         while (a.subtract(b).abs().compareTo(eps) > 0) {
+            // The basic steps are:
+            // 1. A.M. = (a + b) / 2
+            // 2. G.M. = sqrt(a * b)
+            // 3. t = t - p * (A.M. - a)^2
+            // 4. p = 2 * p
+            // 5. a = A.M.
+            // 6. b = G.M.
+            // Repeat until a and b are equal (within context)
             BigDecimal A = a.add(b).multiply(HALF, c);
             b = BigMath.sqrt(a.multiply(b), c);
             t = t.subtract(p.multiply(A.subtract(a).pow(2)), c);
             p = p.add(p);
             a = A;
         }
-
+        //      (a + b)^2
+        // pi = ---------
+        //          4t
         return a.add(b).pow(2).divide(FOUR.multiply(t), context);
     }
 
