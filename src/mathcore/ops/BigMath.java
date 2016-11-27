@@ -106,7 +106,7 @@ public class BigMath {
      * @return The value of e with the desired precision.
      */
     public static BigDecimal E(MathContext context) {
-        return ExpLog.E(context);
+        return Exponential.E(context);
     }
 
     /**
@@ -119,7 +119,7 @@ public class BigMath {
      */
     public static BigDecimal exp(BigDecimal x, MathContext context)
             throws ArithmeticException {
-        return ExpLog.exp(x, context);
+        return Exponential.exp(x, context);
     }
 
     /**
@@ -133,7 +133,7 @@ public class BigMath {
      */
     public static BigDecimal log(BigDecimal x, MathContext context)
             throws ArithmeticException {
-        return ExpLog.log(x, context);
+        return Logarithm.log(x, context);
     }
 
     /**
@@ -152,7 +152,7 @@ public class BigMath {
     public static BigDecimal pow(BigDecimal x,
                                  BigDecimal y,
                                  MathContext context) {
-        return ExpLog.pow(x, y, context);
+        return Exponential.pow(x, y, context);
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);

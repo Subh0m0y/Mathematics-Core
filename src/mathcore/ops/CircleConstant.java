@@ -30,6 +30,13 @@ class CircleConstant {
 
     private static final BigDecimal PI_40 = new BigDecimal("3.141592653589793238462643383279502884197");
 
+    /**
+     * Computes the value of the circle constant: &pi; (pi) as per the
+     * specified MathContext.
+     *
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The value of pi with the required precision.
+     */
     static BigDecimal PI(MathContext context) {
         if (context.getPrecision() <= 0) {
             return PI_40.round(context);

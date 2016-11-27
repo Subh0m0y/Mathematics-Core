@@ -13,14 +13,14 @@ import static mathcore.ops.test.Helper.eps;
 /**
  * A portion of BigMath refactored out to reduce overall complexity.
  * <p>
- * This class handles the exponentiation and logarithm algorithms.
+ * This class handles the exponentiation algorithms.
  *
  * @author Subhomoy Haldar
  * @version 1.0
  */
-class ExpLog {
+class Exponential {
     // Make this class un-instantiable
-    private ExpLog() {
+    private Exponential() {
     }
 
     private static final BigDecimal E_40 = new BigDecimal("2.718281828459045235360287471352662497761");
@@ -35,7 +35,7 @@ class ExpLog {
     static BigDecimal E(MathContext context) {
         if (context.getPrecision() <= 40)   // (int) (1.2 * 34) == 40
             return E_40.round(context);
-        return ExpLog.smallExp(ONE, context);
+        return Exponential.smallExp(ONE, context);
     }
 
     /**
@@ -90,7 +90,7 @@ class ExpLog {
 
         // If the integral part is too large, an exception maybe thrown.
         BigDecimal exp = E.pow(intExp.intValueExact(), c).multiply(
-                ExpLog.smallExp(fraction, c), c
+                Exponential.smallExp(fraction, c), c
         );
 
         return x.signum() < 0 ? ONE.divide(exp, c) : exp;
@@ -126,65 +126,10 @@ class ExpLog {
         int p = abs.toBigInteger().intValueExact();
         BigDecimal f = abs.remainder(ONE);
 
-        BigDecimal v = x.pow(p).multiply(exp(f.multiply(log(x, c)), c));
+        BigDecimal v = x.pow(p).multiply(exp(f.multiply(Logarithm.log(x, c)), c));
 
         // Finally tackle the sign
         return y.signum() < 0 ? ONE.divide(v, c) : v;
     }
 
-    /**
-     * Calculates the natural logarithm of all positive values of x (i.e.
-     * non-zero and non-negative).
-     *
-     * @param x       The positive argument.
-     * @param context The MathContext to specify the precision and RoundingMode.
-     * @return The natural logarithm of x.
-     * @throws ArithmeticException If x is zero or negative.
-     */
-    static BigDecimal log(BigDecimal x, MathContext context)
-            throws ArithmeticException {
-        if (x.signum() <= 0) {
-            throw new ArithmeticException("Invalid value: can't handle 0 and negatives.");
-        }
-        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.5));
-        BigDecimal E = E(c);
-        BigDecimal intExp = ZERO;
-
-        // Work out the integral part of the exponent
-        while (x.compareTo(E) > 0) {
-            x = x.divide(E, c);
-            intExp = intExp.add(ONE);
-        }
-        // Correction for subnormal arguments
-        while (x.compareTo(ONE) < 0) {
-            x = x.multiply(E, c);
-            intExp = intExp.subtract(ONE);
-        }
-
-        return intExp.add(smallLog(x, c), c);
-    }
-
-    /**
-     * Returns the natural logarithm of "small", normalized values of x.
-     *
-     * @param x The normalized argument.
-     * @param c The expanded MathContext.
-     * @return The natural logarithm of "small", normalized values of x.
-     */
-    private static BigDecimal smallLog(BigDecimal x, MathContext c) {
-        BigDecimal term = (x.subtract(ONE)).divide(x.add(ONE), c);
-        BigDecimal sq = term.multiply(term, c);
-        BigDecimal eps = eps(c);
-
-        BigDecimal sum = term;  // The accumulator
-        long den = 3;           // The denominator
-
-        while (term.compareTo(eps) > 0) {
-            term = term.multiply(sq, c);
-            sum = sum.add(term.divide(valueOf(den), c));
-            den += 2;
-        }
-
-        return sum.add(sum, c); // The final multiplication by 2
-    }
 }
