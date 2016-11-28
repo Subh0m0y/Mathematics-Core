@@ -19,7 +19,6 @@ import static java.math.BigDecimal.valueOf;
 class Roots {
     // Make this class un-instantiable
     private Roots() {
-
     }
 
     /**
@@ -46,17 +45,7 @@ class Roots {
         final int limit = n * n * (31 - Integer.numberOfLeadingZeros(newPrecision)) >>> 1;
 
         // Make an initial guess:
-
-        // 1. Obtain first (1/n)th of total bits of magnitude
-        BigInteger magnitude = a.unscaledValue();
-        final int length = magnitude.bitLength() * n_1 / n;
-        magnitude = magnitude.shiftRight(length);
-
-        // 2. Obtain the correct scale
-        final int newScale = a.scale() / n;
-
-        // 3. Construct the initial guess
-        BigDecimal x = new BigDecimal(magnitude, newScale);
+        BigDecimal x = guessRoot(a, n);
         BigDecimal x0;
 
         // Iterate
@@ -69,6 +58,27 @@ class Roots {
         }
 
         return x.round(c);
+    }
+
+    /**
+     * Constructs an initial guess for the n-th principal root of
+     * a given positive value.
+     *
+     * @param a The value whose n-th root is sought.
+     * @param n The root to find.
+     * @return An initial guess.
+     */
+    private static BigDecimal guessRoot(BigDecimal a, int n) {
+        // 1. Obtain first (1/n)th of total bits of magnitude
+        BigInteger magnitude = a.unscaledValue();
+        final int length = magnitude.bitLength() * (n - 1) / n;
+        magnitude = magnitude.shiftRight(length);
+
+        // 2. Obtain the correct scale
+        final int newScale = a.scale() / n;
+
+        // 3. Construct the initial guess
+        return new BigDecimal(magnitude, newScale);
     }
 
     /**
