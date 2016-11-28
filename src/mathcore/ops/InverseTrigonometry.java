@@ -40,7 +40,7 @@ class InverseTrigonometry {
         if (x.signum() < 0) {
             return atan(x.negate(), c).negate();
         }
-        // The Taylor series becomes horribly slow for values ~ 1.
+        // The Taylor series becomes horribly slow for values >= 1.
         if (x.compareTo(ONE) > 0) {
             return PI(c).multiply(HALF).subtract(atan(ONE.divide(x, c), c));
         }
@@ -56,6 +56,17 @@ class InverseTrigonometry {
             BigDecimal newX = x.divide(den, c);
             return TWO.multiply(atan(newX, c));
         }
+        return atanTaylor(x, c);
+    }
+
+    /**
+     * Evaluates the Taylor series for arctan for normalized values of x.
+     *
+     * @param x The normalized argument.
+     * @param c The expanded MathContext.
+     * @return The arctangent of x.
+     */
+    private static BigDecimal atanTaylor(BigDecimal x, MathContext c) {
         BigDecimal eps = eps(c);
 
         BigDecimal minusXSquared = x.pow(2, c).negate();
@@ -73,6 +84,18 @@ class InverseTrigonometry {
         return sum;
     }
 
+    /**
+     * Calculates the arctangent of the given ratio y/x.
+     * <p>
+     * NOTE: The order is important. The vertical component (y) comes first,
+     * then the horizontal component (x).
+     *
+     * @param y       The vertical component.
+     * @param x       The horizontal component.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arctangent of the given ratio.
+     * @throws ArithmeticException If the ratio is 0/0 or undefined.
+     */
     static BigDecimal atan2(BigDecimal y, BigDecimal x, MathContext context)
             throws ArithmeticException {
         MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
@@ -100,6 +123,16 @@ class InverseTrigonometry {
         }
     }
 
+    /**
+     * Calculates the arcsine of the given BigDecimal.
+     * <p>
+     * The argument must lie in [-1, 1].
+     *
+     * @param z       The value whose arcsine is to be calculated.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arcsine of the given value.
+     * @throws ArithmeticException If abs(z) > 1.
+     */
     static BigDecimal arcsin(BigDecimal z, MathContext context)
             throws ArithmeticException {
         int zMinusOne = z.abs().compareTo(ONE);
@@ -113,6 +146,16 @@ class InverseTrigonometry {
         return atan2(z, sqrt(ONE.subtract(z.pow(2)), c), c);
     }
 
+    /**
+     * Calculates the arccosine of the given BigDecimal.
+     * <p>
+     * The argument must lie in [-1, 1].
+     *
+     * @param z       The value whose arccosine is to be calculated.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arccosine of the given value.
+     * @throws ArithmeticException If abs(z) > 1.
+     */
     static BigDecimal arccos(BigDecimal z, MathContext context)
             throws ArithmeticException {
         int zMinusOne = z.abs().compareTo(ONE);

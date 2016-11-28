@@ -210,10 +210,30 @@ public class BigMath {
         return Trigonometry.sinAndCos(x, context);
     }
 
+    /**
+     * Calculates the sine of the given value (in radians).
+     * <p>
+     * NOTE: If you need both sin(x) and cos(x), it is recommended to use
+     * {@link #sinAndCos(BigDecimal, MathContext)}
+     *
+     * @param x       The argument (in radians).
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The sine of x.
+     */
     public static BigDecimal sin(BigDecimal x, MathContext context) {
         return sinAndCos(x, context)[0];
     }
 
+    /**
+     * Calculates the cosine of the given value (in radians).
+     * <p>
+     * NOTE: If you need both sin(x) and cos(x), it is recommended to use
+     * {@link #sinAndCos(BigDecimal, MathContext)}
+     *
+     * @param x       The argument (in radians).
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The cosine of x.
+     */
     public static BigDecimal cos(BigDecimal x, MathContext context) {
         return sinAndCos(x, context)[1];
     }
@@ -230,20 +250,63 @@ public class BigMath {
         return Trigonometry.tan(x, context);
     }
 
+    /**
+     * Calculates the arcsine of the given BigDecimal.
+     * <p>
+     * The argument must lie in [-1, 1].
+     *
+     * @param z       The value whose arcsine is to be calculated.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arcsine of the given value.
+     * @throws ArithmeticException If abs(z) > 1.
+     */
     public static BigDecimal arcsin(BigDecimal z, MathContext context)
             throws ArithmeticException {
         return InverseTrigonometry.arcsin(z, context);
     }
 
+    /**
+     * Calculates the arccosine of the given BigDecimal.
+     * <p>
+     * The argument must lie in [-1, 1].
+     *
+     * @param z       The value whose arccosine is to be calculated.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arccosine of the given value.
+     * @throws ArithmeticException If abs(z) > 1.
+     */
     public static BigDecimal arccos(BigDecimal z, MathContext context)
             throws ArithmeticException {
         return InverseTrigonometry.arccos(z, context);
     }
 
+    /**
+     * Calculates the arctangent of the given value.
+     *
+     * @param z       The value whose arctangent is to be calculated.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arctangent of the given value.
+     */
     public static BigDecimal arctan(BigDecimal z, MathContext context) {
         return atan2(z, ONE, context);
     }
 
+    /**
+     * Calculates the arctangent of the given ratio y/x.
+     * <p>
+     * NOTE: The order is important. The vertical component (y) comes first,
+     * then the horizontal component (x).
+     * <p>
+     * This method is advantageous over the single-argument method because
+     * it provides the option for specifying 1/0 and -1/0, whose arctangents
+     * are &pi;/2 and -&pi;/2 respectively.
+     *
+     * @param y       The vertical component.
+     * @param x       The horizontal component.
+     * @param context The MathContext to specify the precision and RoundingMode.
+     * @return The arctangent of the given ratio.
+     * @throws ArithmeticException If the ratio is 0/0 or undefined.
+     */
     public static BigDecimal atan2(BigDecimal y, BigDecimal x, MathContext context)
             throws ArithmeticException {
         return InverseTrigonometry.atan2(y, x, context);
