@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 
 import static java.math.BigDecimal.*;
-import static mathcore.ops.test.Helper.eps;
 
 /**
  * Provides implementations for commonly used mathematical functions. All
@@ -155,9 +154,6 @@ public class BigMath {
         return Exponential.pow(x, y, context);
     }
 
-    private static final BigDecimal TWO = BigDecimal.valueOf(2);
-    private static final BigDecimal HALF = new BigDecimal("0.5");
-
     /**
      * Computes the value of the circle constant: &pi; (pi) as per the
      * specified MathContext.
@@ -234,25 +230,14 @@ public class BigMath {
         return Trigonometry.tan(x, context);
     }
 
-    public static BigDecimal arcsin(BigDecimal z, MathContext context) {
-        int cmp = z.abs().compareTo(ONE);
-        if (cmp > 0) {
-            throw new ArithmeticException("Illegal argument for arcsine: |z| > 1");
-        } else if (cmp == 0) {
-            BigDecimal result = PI(context).multiply(HALF);
-            return z.signum() > 0 ? result : result.negate();
-        }
-        MathContext c = expandContext(context, context.getPrecision() + 2);
-        return arctan(z.divide(sqrt(ONE.subtract(z.pow(2)), c), c), context);
+    public static BigDecimal arcsin(BigDecimal z, MathContext context)
+            throws ArithmeticException {
+        return InverseTrigonometry.arcsin(z, context);
     }
 
-    public static BigDecimal arccos(BigDecimal z, MathContext context) {
-        if (z.abs().compareTo(ONE) > 0) {
-            throw new ArithmeticException("Illegal argument for arccosine: |z| > 1");
-        }
-        BigDecimal x = sqrt(ONE.subtract(z.pow(2)), context);
-        BigDecimal arcsin = arcsin(x, context);
-        return z.signum() < 0 ? PI(context).subtract(arcsin) : arcsin;
+    public static BigDecimal arccos(BigDecimal z, MathContext context)
+            throws ArithmeticException {
+        return InverseTrigonometry.arccos(z, context);
     }
 
     public static BigDecimal arctan(BigDecimal z, MathContext context) {
@@ -261,76 +246,6 @@ public class BigMath {
 
     public static BigDecimal atan2(BigDecimal y, BigDecimal x, MathContext context)
             throws ArithmeticException {
-        MathContext c = expandContext(context, (int) (context.getPrecision() * 1.2));
-        if (x.signum() == 0) {
-            // The exceptional cases
-            if (y.signum() == 0) {          // 0/0
-                throw new ArithmeticException("Undefined: atan2(0,0)");
-            } else if (y.signum() > 0) {    // +infinity
-                return PI(c).multiply(HALF);
-            } else {                        // -infinity
-                return PI(c).multiply(HALF).negate();
-            }
-        } else if (x.signum() < 0) {
-            // Negative values
-            if (y.signum() == 0) {
-                return ZERO;
-            } else if (y.signum() > 0) {
-                return atan(y.divide(x, c), c).add(PI(c));
-            } else {
-                return atan(y.divide(x, c), c).subtract(PI(c));
-            }
-        } else {
-            // The normal case
-            return atan(y.divide(x, c), c);
-        }
-    }
-
-    private static final BigDecimal HALF_ANGLE_THRESHOLD = new BigDecimal("0.8");
-
-    /**
-     * Returns the arctangent of the given BigDecimal. It works only for
-     * finite values (for infinity, use atan2)
-     *
-     * @param x The argument.
-     * @param c The expanded MathContext.
-     * @return The arctangent of the given BigDecimal.
-     */
-    private static BigDecimal atan(BigDecimal x, MathContext c) {
-        // atan(-x) = -atan(x)
-        if (x.signum() < 0) {
-            return atan(x.negate(), c).negate();
-        }
-        // The Taylor series becomes horribly slow for values ~ 1.
-        if (x.compareTo(ONE) > 0) {
-            return PI(c).multiply(HALF).subtract(atan(ONE.divide(x, c), c));
-        }
-        // Even at 1, atan is horribly slow, so reduce the argument
-        // to a smaller value.
-        if (x.compareTo(HALF_ANGLE_THRESHOLD) > 0) {
-            BigDecimal part = ONE.add(x.pow(2));
-            BigDecimal den = sqrt(part, c).add(ONE);
-
-            //                 x
-            // newX =  -----------------
-            //         sqrt(1 + x^2) + 1
-            BigDecimal newX = x.divide(den, c);
-            return TWO.multiply(atan(newX, c));
-        }
-        BigDecimal eps = eps(c);
-
-        BigDecimal minusXSquared = x.pow(2, c).negate();
-
-        BigDecimal num = x;
-        BigDecimal sum = BigDecimal.ZERO;
-        BigDecimal term = x;
-
-        for (int i = 1; term.abs().compareTo(eps) > 0; i += 2) {
-            term = num.divide(BigDecimal.valueOf(i), c);
-            num = num.multiply(minusXSquared);
-            sum = sum.add(term, c);
-        }
-
-        return sum;
+        return InverseTrigonometry.atan2(y, x, context);
     }
 }

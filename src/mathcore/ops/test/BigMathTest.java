@@ -114,7 +114,7 @@ public class BigMathTest {
         }
     }
 
-    private static final int TAN_LIMIT = 200;
+    private static final int TAN_LIMIT = 20000;
     private static final BigDecimal PI = BigMath.PI(CONTEXT);
     private static final BigDecimal PI_2 = PI.divide(valueOf(2), CONTEXT);
 
@@ -160,11 +160,12 @@ public class BigMathTest {
 
     @Test
     public void testSinAndArcsin() throws Exception {
+        MathContext context = BigMath.expandContext(CONTEXT, (int) (PRECISION * 1.2));
         for (int i = 0; i < SIN_LIMIT; i++) {
             BigDecimal a = Helper.rangedValue(PI_2.negate(), PI_2, RANDOM);
             a = a.round(CONTEXT);
 
-            BigDecimal sin = BigMath.sin(a, CONTEXT);
+            BigDecimal sin = BigMath.sin(a, context);
             BigDecimal inv = BigMath.arcsin(sin, CONTEXT);
 
             assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
@@ -175,11 +176,12 @@ public class BigMathTest {
 
     @Test
     public void testCosAndArccos() throws Exception {
+        MathContext context = BigMath.expandContext(CONTEXT, (int) (PRECISION * 1.2));
         for (int i = 0; i < COS_LIMIT; i++) {
             BigDecimal a = Helper.rangedValue(ZERO, PI, RANDOM);
             a = a.round(CONTEXT);
 
-            BigDecimal cos = BigMath.cos(a, BigMath.expandContext(CONTEXT, PRECISION + 2));
+            BigDecimal cos = BigMath.cos(a, context);
             BigDecimal inv = BigMath.arccos(cos, CONTEXT);
 
             assertTrue(inv.round(CONTEXT).compareTo(a) == 0);
