@@ -18,3 +18,4 @@ so I may use better ones.
 ##Badges
 
 [![codebeat badge](https://codebeat.co/badges/7f255f1a-bbf4-4581-b92a-edcce56b12d7)](https://codebeat.co/projects/github-com-subh0m0y-mathematics-core)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
