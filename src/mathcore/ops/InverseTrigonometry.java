@@ -32,7 +32,7 @@ import static java.math.BigDecimal.ZERO;
 import static mathcore.ops.BigMath.PI;
 import static mathcore.ops.BigMath.expandContext;
 import static mathcore.ops.BigMath.sqrt;
-import static mathcore.ops.test.Helper.eps;
+import static mathcore.ops.BigMath.eps;
 
 /**
  * A portion of BigMath refactored out to reduce overall complexity.

@@ -33,7 +33,7 @@ import static java.math.BigDecimal.ZERO;
 import static java.math.BigDecimal.valueOf;
 import static mathcore.ops.BigMath.expandContext;
 import static mathcore.ops.BigMath.log;
-import static mathcore.ops.test.Helper.eps;
+import static mathcore.ops.BigMath.eps;
 
 /**
  * A portion of BigMath refactored out to reduce overall complexity.

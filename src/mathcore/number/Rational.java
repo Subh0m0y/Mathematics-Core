@@ -36,6 +36,7 @@ import java.math.MathContext;
  * @author Subhomoy Haldar
  * @version 1.0
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class Rational extends AtomicReal {
     private Int num;    // The numerator
     private Int den;    // The denominator

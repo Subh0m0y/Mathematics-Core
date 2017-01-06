@@ -30,7 +30,7 @@ import java.math.MathContext;
 import static java.math.BigDecimal.ONE;
 import static mathcore.ops.BigMath.expandContext;
 import static mathcore.ops.BigMath.sqrt;
-import static mathcore.ops.test.Helper.eps;
+import static mathcore.ops.BigMath.eps;
 
 /**
  * A portion of BigMath refactored out to reduce overall complexity.
@@ -43,7 +43,6 @@ import static mathcore.ops.test.Helper.eps;
 class CircleConstant {
     // Make this class un-instantiable
     private CircleConstant() {
-
     }
 
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
@@ -62,7 +61,7 @@ class CircleConstant {
      * @return The value of pi with the required precision.
      */
     static BigDecimal PI(MathContext context) {
-        if (context.getPrecision() <= 0) {
+        if (context.getPrecision() <= 40) {
             return PI_40.round(context);
         }
 

@@ -26,23 +26,34 @@ package mathcore.ops.test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.util.Random;
 
 /**
- * This is a "Helper" class in the sense that it contains useful utility
- * methods for generating random BigDecimals (for testing purposes) as per
- * the situation. This helps remove a lot of repetition from the code.
- *
  * @author Subhomoy Haldar
- * @version 1.0
+ * @version 2017.01.06
  */
-public class Helper {
+class TestHelper {
     /**
      * Cached copy of the reciprocal of ln(2). Used in converting no. of
      * bits to number of decimal digits.
      */
     private static final double LOG2_INV = 1 / Math.log(2);
+
+    /**
+     * Generates a new BigDecimal that lies within the specified range.
+     *
+     * @param lower  The inclusive lower limit.
+     * @param upper  The exclusive upper limit.
+     * @param random The Random used to generate the fraction.
+     * @return A new BigDecimal that lies within the specified range.
+     */
+    static BigDecimal rangedValue(BigDecimal lower,
+                                  BigDecimal upper,
+                                  Random random) {
+        BigDecimal difference = upper.subtract(lower);
+        BigDecimal fraction = BigDecimal.valueOf(random.nextDouble());
+        return lower.add(difference.multiply(fraction));
+    }
 
     /**
      * Generates a positive BigDecimal with a randomly selected magnitude
@@ -56,8 +67,8 @@ public class Helper {
      * @return A positive
      */
     static BigDecimal scaledPositive(int precision,
-                                            int scaleLimit,
-                                            Random random) {
+                                     int scaleLimit,
+                                     Random random) {
         int bitCount = (int) (Math.log(precision) * LOG2_INV + 1);
         BigInteger magnitude = new BigInteger(bitCount, random);
         int scale = random.nextInt(scaleLimit);
@@ -65,31 +76,5 @@ public class Helper {
             scale = -scale;
         }
         return new BigDecimal(magnitude, scale);
-    }
-
-    /**
-     * Generates a new BigDecimal that lies within the specified range.
-     *
-     * @param lower  The inclusive lower limit.
-     * @param upper  The exclusive upper limit.
-     * @param random The Random used to generate the fraction.
-     * @return A new BigDecimal that lies within the specified range.
-     */
-    static BigDecimal rangedValue(BigDecimal lower,
-                                         BigDecimal upper,
-                                         Random random) {
-        BigDecimal difference = upper.subtract(lower);
-        BigDecimal fraction = BigDecimal.valueOf(random.nextDouble());
-        return lower.add(difference.multiply(fraction));
-    }
-
-    /**
-     * Returns the epsilon required for the specified context.
-     *
-     * @param context The context to generate the epsilon for.
-     * @return The required epsilon.
-     */
-    public static BigDecimal eps(MathContext context) {
-        return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
 }

@@ -26,6 +26,7 @@
 package mathcore.ops;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 
 import static java.math.BigDecimal.*;
@@ -311,5 +312,15 @@ public class BigMath {
     public static BigDecimal atan2(BigDecimal y, BigDecimal x, MathContext context)
             throws ArithmeticException {
         return InverseTrigonometry.atan2(y, x, context);
+    }
+
+    /**
+     * Returns the epsilon required for the specified context.
+     *
+     * @param context The context to generate the epsilon for.
+     * @return The required epsilon.
+     */
+    public static BigDecimal eps(MathContext context) {
+        return new BigDecimal(BigInteger.ONE, context.getPrecision() + 1);
     }
 }
